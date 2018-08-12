@@ -1,20 +1,20 @@
 ﻿# html lang
 # ---------------
-language: zh-Hans
+language: en
 
 # Main menu navigation
 # ---------------
 menu:
   首页: /
   文章: /archives
+  标签: /tags
+  分类: /categories
   关于我: /me
-  # Tags: /tags
-  # Categories: /categories
   #XXX: /xxx
 
 # Favicon
 # ---------------
-favicon: /cute.ico
+favicon: favicon.ico
 
 # PWA
 # ---------------
@@ -25,13 +25,14 @@ pwa:
 
 # Highlight theme
 # ---------------
-highlight_theme: default
+highlight_theme: light
 
 # Nav settings
 # ---------------
 social:
   #icon_name: url
   github: https://github.com/zzzzzzmj
+  rss: /atom.xml
 
 # Algolia search
 # ---------------
@@ -240,10 +241,10 @@ busuanzi:
 #   text: ''
 
 theme_color:
-    enable: true
-    main: "#000000"
-    paginator: '#000'
+    enable: false
+    main: "#c0c0c0"
+    paginator: '#c0c0c0'
     button_hover: '49B1F5'
-    link_color: "#000"
-    hr_color: "#000"
-    mate_color: "#000"
+    link_color: "#c0c0c0"
+    hr_color: "#c0c0c0c"
+    mate_color: "#c0c0c0c"
