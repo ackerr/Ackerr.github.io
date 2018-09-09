@@ -25,7 +25,7 @@ pwa:
 
 # Highlight theme
 # ---------------
-highlight_theme: light
+highlight_theme: darker 
 
 # Nav settings
 # ---------------
@@ -104,7 +104,7 @@ cdn:
 # ---------------
 avatar: https://avatars2.githubusercontent.com/u/35414361?s=400&u=9ab91bc5b3bef9fd91ffb6b9f6bfbc9f4e0518d7&v=4 
 
-top_img: https://images.unsplash.com/photo-1511669161250-913150ad871d?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=534b174cc6c008a9f047dd9ca741b97c&auto=format&fit=crop&w=1351&q=80 # false or url of img 
+top_img: http://pdc0iq8f2.bkt.clouddn.com/flower.jpeg # false or url of img 
 
 post_meta:
   date_type: created # created or updated 
@@ -241,10 +241,11 @@ busuanzi:
 #   text: ''
 
 theme_color:
-    enable: false
-    main: "#c0c0c0"
-    paginator: '#c0c0c0'
-    button_hover: '49B1F5'
-    link_color: "#c0c0c0"
-    hr_color: "#c0c0c0c"
-    mate_color: "#c0c0c0c"
+  enable: true # or false -> to use the default theme
+  main: "#000"
+  paginator: "#000"
+  button_hover: "#49B1F5"
+  text_selection: "#000"
+  link_color: "#000"
+  hr_color: "#000"
+  meta_color: "#000"
