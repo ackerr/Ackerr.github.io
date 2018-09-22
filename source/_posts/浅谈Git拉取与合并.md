@@ -9,17 +9,17 @@ categories:
 
 > Git 应该是现阶段使用最多的版本管理系统，日常多人开发时，或多或少都要用到一些git 操作，就比如新写好功能准备提pr时，一般远端库也会有更新，这个时候正常流程就是去拉取最新的代码，有冲突也可以早点解决。
 
-
+<!-- more -->
 
 这篇文章主要讲 `git中拉取与合并代码`的几种操作，下图可以很好的诠释了几个操作代码流向。
 
-![操作流程图](http://www.ruanyifeng.com/blogimg/asset/2014/bg2014061202.jpg)
+![操作流程图](http://pdc0iq8f2.bkt.clouddn.com/git1.jpg)
 
 
 
 先介绍两种拉取代码的姿势
 
-#### 1.git pull
+## 1.git pull
 
 ```shell
 git pull <远程主机名> <远程分支名>:<本地分支名>
@@ -27,7 +27,7 @@ git pull <远程主机名> <远程分支名>:<本地分支名>
 
 pull 操作简单粗暴，直接将远端代码拉取并合并到本地，对，就是这么不讲道理，实际上`pull ≈ fetch + merge` 。
 
-#### 2.git fetch
+## 2.git fetch
 
 ```shell
 git fetch <远程主机名> <远程分支名>:<本地分支名>
@@ -49,7 +49,7 @@ git merge origin/master  # git rebase origin/master
 
 此时如果想要更新本地代码就需要进一步merge 或 rebase 操作。
 
-#### 3.git merge
+## 3.git merge
 
 ```shell
 git merge <远程主机名> <远程分支名>  # <本地分支名>
@@ -57,15 +57,15 @@ git merge <远程主机名> <远程分支名>  # <本地分支名>
 
 顾名思义就是将某分支的内容合并到当前分支，如下图，c4分支合并c5分支。
 
-![merge 分支变化](https://git-scm.com/book/en/v2/images/basic-merging-2.png)
+![merge 分支变化](http://pdc0iq8f2.bkt.clouddn.com/git2.png)
 
-#### 4.git rebase
+## 4.git rebase
 
 > 吐槽：用的不熟练真的让人头皮发麻
 
 其实 rebase 与 merge 操作结果一致，不过方式有所不同。
 
-![rebase 分支变化](https://git-scm.com/book/en/v2/images/basic-rebase-3.png)
+![rebase 分支变化](http://pdc0iq8f2.bkt.clouddn.com/git3.png)
 
 rebase 会将分支移动到master 分支后，有效的将master的分支合并。不过这里与merge不同的地方是，rebase 不会像merge 一样新生成一个合并提交，而是改变了历史提交，从而使项目历史呈现出线性结构。
 
@@ -87,7 +87,7 @@ d, drop = remove commit (直接将修改弹出，撤销commit)
 
 
 
-##### 最后记一个正常提交流程
+### 最后记一个正常提交流程
 
 - git fetch
 - git rebase
@@ -102,4 +102,4 @@ d, drop = remove commit (直接将修改弹出，撤销commit)
 
 
 
-## 总结一句：git真好用
+# 总结一句：git真好用
