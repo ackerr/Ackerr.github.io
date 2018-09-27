@@ -164,9 +164,9 @@ addThis:
 # Comments System
 # ---------------
 disqus:
-  enable: false 
-  #shortname: 
-  #count: 
+  enable: true 
+  shortname: zmj
+  # count: 
 
 # laibili:
   # enable: false
