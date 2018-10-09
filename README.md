@@ -1,6 +1,6 @@
 ## (●･̆⍛･̆●)
 
-> <a href='https://zzzzzzmj.github.io'>www.wzmmmmj.com</a>小站持续更新中
+> <a href='https://www.wzmmmmj.com'>博客</a>持续更新中
 
 #### 大致内容
 
@@ -12,5 +12,3 @@
 - 学习Flask,理解源码
 - 学习django-rest-framework
 
-#### TODO
-- 写一下fetch rebase (这周)
