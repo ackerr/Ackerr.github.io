@@ -12,6 +12,6 @@
 - 学习Flask,理解源码
 - 学习django-rest-framework
 
-### 2018-10-20  
+### 2018-10-29  
 
-- 这周写一篇关于flask-sqlalchemy
+- 学习一周年~~
