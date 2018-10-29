@@ -35,7 +35,6 @@ db = SQLAlchemy(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://f{username}:{password}@{hostname}/{database}'
 ```
 
-
 ## 定义模型
 
 ```python
@@ -65,7 +64,6 @@ class Role(db.Model):
 
 
 其中 `__tablename__`可以重新定义表在库中的名字，`db.Column()` 为一个字段，第一个参数为字段类型如`db.String(32)`为字符串类型， `primary_key=True `字段为主键,(这里与Django orm 中会默认生成一个id作为主键不同), 其他类型 `unique=True`为唯一键，`index=True`为字段建立索引，`default=0`设置一个默认值，`nullable=True `该字段可为null 
-
 
 
 ## 数据库关系
