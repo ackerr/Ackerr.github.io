@@ -49,7 +49,7 @@ pipenv install
 
 执行结果如下图
 
-![执行结果](http://pdc0iq8f2.bkt.clouddn.com/pipenv.png)
+![执行结果](http://picture.wzmmmmj.com/pipenv.png)
 
 观察执行过程，可发现该命令做了几步。
 

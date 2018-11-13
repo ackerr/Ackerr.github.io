@@ -13,7 +13,7 @@ categories:
 
 这篇文章主要讲 `git中拉取与合并代码`的几种操作，下图可以很好的诠释了几个操作代码流向。
 
-![操作流程图](http://pdc0iq8f2.bkt.clouddn.com/git1.jpg)
+![操作流程图](http://picture.wzmmmmj.com/git1.jpg)
 
 
 
@@ -57,7 +57,7 @@ git merge <远程主机名> <远程分支名>  # <本地分支名>
 
 顾名思义就是将某分支的内容合并到当前分支，如下图，c4分支合并c5分支。
 
-![merge 分支变化](http://pdc0iq8f2.bkt.clouddn.com/git2.png)
+![merge 分支变化](http://picture.wzmmmmj.com/git2.png)
 
 ## 4.git rebase
 
@@ -65,7 +65,7 @@ git merge <远程主机名> <远程分支名>  # <本地分支名>
 
 其实 rebase 与 merge 操作结果一致，不过方式有所不同。
 
-![rebase 分支变化](http://pdc0iq8f2.bkt.clouddn.com/git3.png)
+![rebase 分支变化](http://picture.wzmmmmj.com/git3.png)
 
 rebase 会将分支移动到master 分支后，有效的将master的分支合并。不过这里与merge不同的地方是，rebase 不会像merge 一样新生成一个合并提交，而是改变了历史提交，从而使项目历史呈现出线性结构。
 

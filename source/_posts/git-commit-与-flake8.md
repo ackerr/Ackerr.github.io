@@ -70,5 +70,5 @@ flake8 `git diff --cached --name-only`
 
 ## 效果演示
 
-![效果演示](http://pdc0iq8f2.bkt.clouddn.com/flake8.png)
+![效果演示](http://picture.wzmmmmj.com/flake8.png)
 
