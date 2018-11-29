@@ -34,6 +34,7 @@ db = SQLAlchemy(app)
 ```python
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://f{username}:{password}@{hostname}/{database}'
 ```
+<!-- more -->
 
 ## 定义模型
 

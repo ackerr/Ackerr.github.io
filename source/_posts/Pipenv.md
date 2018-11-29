@@ -27,6 +27,8 @@ pip install --user --upgrade pipenv
 
 > 前提是已经装好Python 与 pip
 
+<!-- more -->
+
 ```bash
 # 如果安装后，无法使用pipenv命令，需要多做一步操作，将Python路径加到环境变量中
 

@@ -31,8 +31,8 @@ highlight_theme: darker
 # ---------------
 social:
   #icon_name: url
-  # github: https://github.com/zzzzzzmj
-  # rss: /atom.xml
+  github: https://github.com/zzzzzzmj
+  rss: /atom.xml
 
 # Algolia search
 # ---------------
