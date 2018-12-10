@@ -51,6 +51,8 @@ pip install shadowsocks
 
 ### 配置文件
 
+**vim /etc/shadowsocks.json**
+
 ```bash
 {
     "server":"0.0.0.0"
