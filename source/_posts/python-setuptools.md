@@ -1,5 +1,5 @@
 ---
-title: python 打包发布
+title: Python 打包发布
 date: 2018-08-26 19:29:45
 tags: 
     - Python

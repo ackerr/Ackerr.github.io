@@ -1,5 +1,5 @@
 ---
-title: 浅谈flask-sqlalchemy
+title: 浅谈Flask-sqlalchemy
 date: 2018-10-28 20:08:58
 tags:
     - Python

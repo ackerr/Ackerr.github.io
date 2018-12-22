@@ -1,5 +1,5 @@
 ---
-title: git commit 配置 flake8
+title: Git commit 配置 flake8
 date: 2018-10-11 19:49:03
 tags:
     - git
