@@ -66,8 +66,7 @@ from django.db.models import Avg, Max, Min
 
 Book.objects.filter(publisher__name='新华出版社').aggregate(min_price=Min('price'), avg_price=Avg('price'), max_rate=Max('rating'))
 ```
-
-
+<!-- more -->
 
 ## annotate（分组查询）
 
