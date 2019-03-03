@@ -47,6 +47,8 @@ class Store(models.Model):
 
 为了能更直观的查看orm的查询次数，我们可以在`settings`文件 中加入一段`logging`配置，可以在console 中执行orm时，同时输出对应SQL，从而更直观的进行性能比较。
 
+<!-- more -->
+
 ```python
 LOGGING = {
     'version': 1,

@@ -39,6 +39,9 @@ git push <remote> -f
 
 > git logg='logg = log --graph --decorate --oneline --abbrev-commit --all'  可在.gitconfig文件中添加此alias
 
+
+<!-- more -->
+
 ![修改前的commit message](http://picture.wzmmmmj.com/rebase_1.png)
 
 **例：这里我想修改中间两个commti message**
