@@ -25,7 +25,7 @@ pwa:
 
 # Highlight theme
 # ---------------
-highlight_theme: darker
+highlight_theme: light
 
 # Nav settings
 # ---------------
@@ -104,7 +104,7 @@ cdn:
 # ---------------
 avatar: https://avatars2.githubusercontent.com/u/35414361?s=400&u=9ab91bc5b3bef9fd91ffb6b9f6bfbc9f4e0518d7&v=4 
 
-top_img:   http://picture.wzmmmmj.com/subway.jpeg # false or url of img 
+top_img:   http://picture.wzmmmmj.com/background.jpg # false or url of img 
 
 post_meta:
   date_type: created # created or updated 
@@ -242,10 +242,10 @@ busuanzi:
 
 theme_color:
   enable: true # or false -> to use the default theme
-  main: "#000"
-  paginator: "#000"
+  main: "#4682B4"
+  paginator: "#4682B4"
   button_hover: "#49B1F5"
-  text_selection: "#000"
-  link_color: "#000"
-  hr_color: "#000"
-  meta_color: "#000"
+  text_selection: "#BEBEBE"
+  link_color: "#4682B4"
+  hr_color: "#4682B4"
+  meta_color: "#4682B4"
