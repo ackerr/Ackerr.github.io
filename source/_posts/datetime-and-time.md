@@ -66,7 +66,7 @@ struct_time = time.strptime(str_time, "%Y-%m-%d, %H:%M:%S, %w")  # 两个参数�
 
 >  参考下图食用更佳
 
-![一张图看懂时间类型转化](http://picture.wzmmmmj.com/time.jpg)
+![一张图看懂时间类型转化](https://picture.wzmmmmj.com/time.jpg)
 
 
 
@@ -108,5 +108,3 @@ print(datetime.datetime.fromtimestamp(time.time()))
 > https://zhuanlan.zhihu.com/p/23679915
 >
 > https://www.cnblogs.com/lxmhhy/p/6030730.html
->
-> http://s9.sinaimg.cn/mw690/b09d4602xd10ea8f9ab88&690

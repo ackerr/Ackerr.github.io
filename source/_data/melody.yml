@@ -104,7 +104,7 @@ cdn:
 # ---------------
 avatar: https://avatars2.githubusercontent.com/u/35414361?s=400&u=9ab91bc5b3bef9fd91ffb6b9f6bfbc9f4e0518d7&v=4 
 
-top_img:   http://picture.wzmmmmj.com/background.jpg # false or url of img 
+top_img:   https://picture.wzmmmmj.com/background.jpg # false or url of img 
 
 post_meta:
   date_type: created # created or updated 

@@ -17,10 +17,11 @@ categories:
 
 假设数据集为n，每次查找后数据减少一半，如图，其中可知k=log<sub>2</sub>n，
 
-![](http://picture.wzmmmmj.com/bsearch.jpg)
+![](https://picture.wzmmmmj.com/bsearch.jpg)
 
 所以二分查找的时间复杂度为 **O(logn)**， 并且不需要额外空间，空间复杂度为 **O(1)**
 
+<!-- more -->
 ### 二分查找基本实现
 
 > 有序数组不存在重复元素
@@ -58,7 +59,6 @@ def _search(nums, low, high, n):
     else:
         return mid
 ```
-<!-- more -->
 
 ### 二分查找变种的实现
 

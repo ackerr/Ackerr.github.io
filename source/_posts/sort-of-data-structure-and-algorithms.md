@@ -15,7 +15,7 @@ categories:
 
 3. 排序算法的稳定性，如果待排序的序列中存在值相等的元素，经过排序之后，相等元素原有的先后顺序不变则稳定
 
-![](http://picture.wzmmmmj.com/sort.png)
+![](https://picture.wzmmmmj.com/sort.png)
 
 > 附一张排序图，其中 n=数据量     k=桶的个数     In-place=没有占用额外内存，out-place=占用额外内存
 <!-- more -->
