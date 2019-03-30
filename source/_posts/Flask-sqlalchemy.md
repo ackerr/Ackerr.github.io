@@ -144,7 +144,7 @@ db.create_all()
 pip install flask-migrate
 ```
 
-1. 第一步需要去添加配置
+2. 第一步需要去添加配置
 
 ```python
 from flask_migrate import Migrate
@@ -153,25 +153,25 @@ from flask_migrate import Migrate
 migrate = Migrate(app)
 ```
 
-1. 第一次需要初始化项目，创建迁移仓库，会生成一个存放迁移文件的`migrations`文件夹
+3. 第一次需要初始化项目，创建迁移仓库，会生成一个存放迁移文件的`migrations`文件夹
 
 ```base
 flask db init
 ```
 
-1. 每当有数据库更新时，需要创建迁移脚本
+4. 每当有数据库更新时，需要创建迁移脚本
 
 ```base
 flask db migrate -m 'migrate message'
 ```
 
-1. 将迁移应用到数据库中
+5. 将迁移应用到数据库中
 
 ```base
 flask db upgrade
 ```
 
-1. 如果最后一次迁移未达到预期效果，可以还原上一次改动
+6. 如果最后一次迁移未达到预期效果，可以还原上一次改动
 
 ```bash
 flask db downgrade

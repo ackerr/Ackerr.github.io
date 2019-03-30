@@ -40,7 +40,7 @@ def bubble_sort(nums):
 
 ### 选择排序
 
-选择排序，顾名思义，就是每次遍历选择序列中最小值，放置在此次遍历的首位。与冒泡排序不同的是，选择排序是通过对整体的比较。因为每次遍历都会遍历全部元素，所以选择排序的最好，最坏时间复杂度都是 **O(n^2^)**
+选择排序，顾名思义，就是每次遍历选择序列中最小值，放置在此次遍历的首位。与冒泡排序不同的是，选择排序是通过对整体的比较。因为每次遍历都会遍历全部元素，所以选择排序的最好，最坏时间复杂度都是 O(n^2^)
 
 1. 将序列首位元素设置为标志位；
 2. 遍历序列，与标志位比较，选出最小值，与首位元素交换；
@@ -74,8 +74,8 @@ def insert_sort(cls, nums):
         for j in range(i, 0, -1):
             if nums[j] < nums[j - 1]:
                 nums[j - 1], nums[j] = nums[j], nums[j - 1]
-                else:
-                    break
+            else:
+                break
     return nums
 ```
 
@@ -97,8 +97,8 @@ def shell_sort(nums):
             for j in range(i, 0, -gap):
                 if nums[j] < nums[j - gap]:
                     nums[j - gap], nums[j] = nums[j], nums[j - gap]
-                    else:
-                        break
+                else:
+                    break
         gap //= 3
    return nums
 ```
