@@ -8,7 +8,7 @@ subtitle:
 description: 
 keywords:
 author: ZmJ
-language: zh-Hans
+language: zh-CN
 timezone:
 
 # URL
@@ -73,7 +73,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: melody 
+theme: indigo # melody 
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
@@ -81,4 +81,25 @@ deploy:
   type: git
   repository: git@github.com:zzzzzzmj/zzzzzzmj.github.io.git
   branch: master
+
+
+# indigo
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: true
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: false
+    tags: true
 

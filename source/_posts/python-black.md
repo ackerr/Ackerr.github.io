@@ -2,7 +2,7 @@
 title: 自动格式化工具 Black
 date: 2019-06-02 21:33:54
 tags:
-    - python
+    - Python
     - formatter
 categories:
     - 工具
@@ -17,9 +17,10 @@ categories:
 原项目中，用了`flake8+pylint+yapf`的三重检查，在替换过程中也遇到了一些问题，结果就是被pylint锤，被flake8锤，不过最终这些问题都在[github issue](https://github.com/python/black/issues)中找了解答。
 > Ps: 官方解决方法：有冲突就ignore，disable，大不了remove
 
+<!-- more -->
+
 ![](https://picture.wzmmmmj.com/star-trending.png)
 
-<!-- more -->
 
 ## trailing comma
 
