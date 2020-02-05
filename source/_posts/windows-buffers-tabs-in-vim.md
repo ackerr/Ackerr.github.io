@@ -17,8 +17,7 @@ Vim中的buffer，tab和window是容易混淆的概念，vim中输入`:help wind
 
 <!--more-->
 
-## Buffers
-
+### Buffers
 > A buffer is the in-memory text of a file.
 
 Buffer即加载在内存中内容，常为一个文件，并且一个文件只会存在一个buffer。通过`vim a.txt b.txt`会打开两个文件buffer，同时会在编辑a.txt，接着执行`:edit c.txt`，窗口会显示c.txt文件，通过 `:ls` 可以显示所有buffer，这里会显示三行记录。
@@ -48,13 +47,12 @@ h （隐藏的缓冲区）
 #### Tips
 如果使用NERDTree时出现:bd退出vim session的时候，可以看看[此issue](https://github.com/preservim/nerdtree/issues/400)，通过`:bp<CR>bd #<CR>`可以达到删除当前buffer，并回到上一个buffer的效果。
 
-## Windows
-
+### Windows
 > A window is a viewport on a buffer.
 
 Window即用于展示buffer的窗口，通过该窗口才能看到buffer中的内容。 使用`:split`或`:vsplit`，可实现分屏效果，在新窗口中展示当前buffer，也可在操作后加文件，新窗口中展示新打开的buffer。也就是说，多个window可以展示相同的buffer。
 
-## Tabs
+### Tabs
 
 > A tab page is a collection of windows.
 
