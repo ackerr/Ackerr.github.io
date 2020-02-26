@@ -85,7 +85,7 @@ theme_config:
     nav:
       home: /
       archives: /archives/
-      github: https://github.com/wzmj
+      github: https://github.com/Ackerr
       rss: /atom.xml
 
     rss: atom.xml
@@ -124,5 +124,5 @@ theme_config:
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: git@github.com:WZMJ/WZMJ.github.io.git
+  repository: git@github.com:Ackerr/Ackerr.github.io.git
   branch: master
