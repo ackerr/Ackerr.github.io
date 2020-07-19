@@ -2,7 +2,7 @@
 title: Vim中的Buffers, Windows, Tabs
 date: 2020-01-31 19:50:06
 tags:
-    - Vim
+    - vim
 ---
 
 Vim中的buffer，tab和window是容易混淆的概念，vim中输入`:help window`，会对三个概念进行简短解释:

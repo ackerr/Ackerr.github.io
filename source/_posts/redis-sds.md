@@ -3,7 +3,6 @@ title: 深入浅出Redis之sds
 date: 2020-07-12 23:25:24
 tags:
   - redis
-  - sds
 categories:
   - redis
 ---
@@ -281,11 +280,11 @@ sds sdsRemoveFreeSpace(sds s) {
 
 sds相比于C语言字符串，具有以下几个显著的特点：
 
-1. 结构中存储字符串长度，获取字符长度只需要常量时间复杂度，而原生字符串则需要遍历数组。
-2. 二进制安全，可以存储字节数据，因为存储字符串长度，不会提前遇到\0字符而终止
-3. 杜绝缓冲区溢出，C语言字符串本身不记录数组长度，增加操作时，分配内存不足时容易造成缓冲区溢出，而sds因为存在alloc，会在修改时，检查空间大小是否满足。
-4. 内存预分配以及惰性删除，减少内存重新分配次数
-5. 兼容C标准库中的部分字符串函数
+1. 结构中存储字符串长度，获取字符长度只需要常量时间复杂度，而原生字符串则需要遍历数组；
+2. 二进制安全，可以存储字节数据，因为存储字符串长度，不会提前遇到\0字符而终止；
+3. 杜绝缓冲区溢出，C语言字符串本身不记录数组长度，增加操作时，分配内存不足时容易造成缓冲区溢出，而sds因为存在alloc，会在修改时，检查空间大小是否满足；
+4. 内存预分配以及惰性删除，减少内存重新分配次数；
+5. 兼容C标准库中的部分字符串函数。
 
 
 
@@ -293,4 +292,4 @@ sds相比于C语言字符串，具有以下几个显著的特点：
 
 - [Redis sds](https://github.com/antirez/sds)
 - [Redis设计与实现](https://redisbook.readthedocs.io/en/latest/internal-datastruct/sds.html)
-- [Redis内部数据结构详解(2)——sds](http://zhangtielei.com/posts/blog-redis-sds.html)
+- [Redis内部数据结构详解——sds](http://zhangtielei.com/posts/blog-redis-sds.html)
