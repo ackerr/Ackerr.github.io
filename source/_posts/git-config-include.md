@@ -56,8 +56,8 @@ git config user.email name1@example.com
 对于work目录下已存在的repo，可执行以下命令查看`.gitconfig-work`中配置是否生效
 
 ```bash
-git config --shwo-origin --get user.name
-git config --shwo-origin --get xxxx
+git config --show-origin --get user.name
+git config --show-origin --get xxxx
 ```
 
 > 参考
