@@ -1,0 +1,17 @@
+<footer id="footer">
+  <div class="footer-left">
+    <%= __('footer.copyright') %> &copy;
+    <%= "2018-" + new Date().getFullYear() %>
+    <%= config.author || config.title %>
+    <a href="http://www.beian.miit.gov.cn" target="_blank">浙ICP备18013109号</a><br>
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <% for (var i in theme.nav) { %>
+          <li><a href="<%- url_for(theme.nav[i]) %>"><%= __('nav.'+i).replace("nav.", "") %></a></li>
+        <% } %>
+      </ul>
+    </nav>
+  </div>
+</footer>
