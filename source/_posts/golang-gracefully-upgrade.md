@@ -78,7 +78,7 @@ func main() {
 }
 ```
 
-例子中通过主goruntine通过`signal.Notify()`监听， `<-quit`进行阻塞，另外一个goruntine启动http server，当接收到SIGINT或SIGTERM信号后，http.ListenAndServe()返回http.ErrServerClosed，此时httpserver不再接受新请求，并创建一个超时时间为5s的context，通过http.Server的[Shutdown](https://golang.org/pkg/net/http/#Server.Shutdown)，并阻塞等待连接释放或context超时。
+例子中通过主goroutine通过`signal.Notify()`监听， `<-quit`进行阻塞，另外一个goroutine启动http server，当接收到SIGINT或SIGTERM信号后，http.ListenAndServe()返回http.ErrServerClosed，此时httpserver不再接受新请求，并创建一个超时时间为5s的context，通过http.Server的[Shutdown](https://golang.org/pkg/net/http/#Server.Shutdown)，并阻塞等待连接释放或context超时。
 
 ## grpc-go
 
@@ -121,7 +121,7 @@ func main() {
 
 ## cron
 
-robfig/cron包中虽然没提供关于gracefully shutdown的内容，至少提供了Start以及Stop方法，按照前几个实现的套路，我们可以自己动手实现一下gracefully shutdown。因为cron.Start本身会新起一个的goruntine启动server，所以我们在主goruntine中监听signal，在收到Signal后，执行cron.Stop()，而cron.Stop()会返回一个context，后续通过select监听context结束或者通过time.After等待超时，待当前所有定时任务结束后，进程结束。
+robfig/cron包中虽然没提供关于gracefully shutdown的内容，至少提供了Start以及Stop方法，按照前几个实现的套路，我们可以自己动手实现一下gracefully shutdown。因为cron.Start本身会新起一个的goroutine启动server，所以我们在主goroutine中监听signal，在收到Signal后，执行cron.Stop()，而cron.Stop()会返回一个context，后续通过select监听context结束或者通过time.After等待超时，待当前所有定时任务结束后，进程结束。
 
 ```go
 package main
@@ -155,5 +155,5 @@ func main() {
 
 ## 小结
 
-本文只介绍了golang中如何实现平滑发版，一般框架都会给出关于gracefully shutdown的api，没有也没关系，套路就是正常启动server后，通过监听Signal并阻塞主goruntine，待接收到SIGNTERM等信号后，通过time.After或context.WithTimeout，作为超时处理，并等待进行中的goruntine全部结束。有兴趣可以查看各个类库中如何等待处理进行中的连接。
+本文只介绍了golang中如何实现平滑发版，一般框架都会给出关于gracefully shutdown的api，没有也没关系，套路就是正常启动server后，通过监听Signal并阻塞主goroutine，待接收到SIGNTERM等信号后，通过time.After或context.WithTimeout，作为超时处理，并等待进行中的goroutine全部结束。有兴趣可以查看各个类库中如何等待处理进行中的连接。
 
