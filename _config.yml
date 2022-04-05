@@ -124,5 +124,5 @@ theme_config:
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: git@github.com:Ackerr/Ackerr.github.io.git
+  repository: git@github.com:ackerr/Ackerr.github.io.git
   branch: master
