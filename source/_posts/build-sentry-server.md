@@ -208,7 +208,7 @@ vim /etc/crontab
 
 访问域名，成功登陆后，到此Sentry服务的搭建完成。
 
-![成果图](https://picture.wzmmmmj.com/sentry-web.jpg)
+![成果图](/images/sentry-web.jpg)
 
 
 > Sentry还支持[一些插件]()，可以根据需要进行配置，例如jira ….

@@ -46,7 +46,7 @@ listNode中使用void *指针保存节点值，对节点值的类型不做限制
 
 综上，Redis中adlist的结构如下图所示：
 
-![redis adlist](https://picture.wzmmmmj.com/redis-adlist.png)
+![redis adlist](/images/redis-adlist.png)
 
 ## 迭代器
 

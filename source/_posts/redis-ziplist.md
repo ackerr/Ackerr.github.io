@@ -38,7 +38,7 @@ unsigned char *ziplistNew(void) {
 
 通过初始化函数`ziplistNew`，可知压缩列表本质上是一个字节数组。初始化ziplist过程，一共申请了11字节的内存空间，其中包括两个uint32_t，一个uint16_t，一个uint8_t。初始化后压缩列表内部内存分布如下
 
-![](https://picture.wzmmmmj.com/ziplist.png)
+![](/images/ziplist.png)
 
 组成部分含义：
 - zlbytes，表示整个压缩列表占用字节数，包括其自身4字节

@@ -4,12 +4,13 @@ A responsive, clean and simple [Hexo](http://hexo.io) theme for a personal websi
 
 :cactus: [Demo](https://probberechts.github.io/hexo-theme-cactus/)
 
-![screenshot](https://docs.google.com/uc?id=1K66bccwr4z9TgJev0AzCqbI7BxzVr7md)
+![screenshot](https://user-images.githubusercontent.com/2175271/137625287-24a4ac77-fbc9-4c99-a4cd-90455d93d13c.png)
 
 ## Summary
 
 - [General](#general)
 - [Features](#features)
+- [Prerequisites](#prerequisites)
 - [Install](#install)
 - [Configuration](#configuration)
 - [License](#license)
@@ -28,44 +29,66 @@ A responsive, clean and simple [Hexo](http://hexo.io) theme for a personal websi
 - Support for local search
 - Projects list
 - I18n support
-- Disqus integration
-- Google analytics / Baidu Tongji
+- Disqus / Utterances
+- Google analytics / Baidu Tongji / [Umami Analytics](https://umami.is) 
 - Font Awesome icons
 - Simplicity
 
+## Prerequisites
+
+1. In order to use this theme you must have installed [hexo](https://hexo.io/docs/).
+
+2. Create the `root` directory for the blog by initializing it with hexo:
+
+    ```sh
+    $ hexo init my-blog
+    ```
+
+3. Navigate into the new directory:
+
+    ```sh
+    $ cd my-blog
+    ```
+
 ## Install
+
 1. In the `root` directory:
 
-    ```git
+    ```sh
     $ git clone https://github.com/probberechts/hexo-theme-cactus.git themes/cactus
     ```
 
-2. Change the `theme` property in the `config.yml` file.
+2. Change the `theme` property in the `_config.yml` file.
 
     ```yml
     # theme: landscape
     theme: cactus
     ```
-    See below for more information on how to customize this theme.
-    
+   
+   See below for more information on how to customize this theme.
+
 3. Create pages and articles with the `hexo new [layout] <title>` command.
-    For example, to create an "about me" page, run:
+   For example, to create an "about me" page, run:
+   
     ```sh
     $ hexo new page about
     ```
-    This will create a new file in `source/about/index.md`
-    Similary, you can create a new article with
+   
+   This will create a new file in `source/about/index.md`
+   Similarly, you can create a new article with
+   
     ```sh
     $ hexo new post "hello world"
     ```
-    and add some interesting content in `source/_posts/hello-world.md`.
-    
+   
+   and add some interesting content in `source/_posts/hello-world.md`.
+
 4. Run: `hexo generate` and `hexo server`
 
 5. [Publish your blog](https://hexo.io/docs/one-command-deployment.html)!
 
-
 ## Configuration
+
 You can (and should) modify a couple of settings. An overview of all settings
 can be found in  [_config.yml](_config.yml). The most important ones are
 discussed below.
@@ -82,14 +105,12 @@ theme_config:
   colorscheme: white
 ```
 
-
 ```yml
 # themes/cactus/_config.yml
 colorscheme: dark
 ```
 
 This will override the default black colorscheme in `themes/cactus/_config.yml`.
-
 
 ### Color scheme
 
@@ -103,20 +124,18 @@ colorscheme: light
 Alternatively, you can easily create your own color scheme by creating a new
 file in `source/css/_colors`.
 
-
 ### Navigation
 
-Setup the navigation menu in the `_config.yml`:
+Set up the navigation menu in the `_config.yml`:
 
 ```yml
 nav:
-  Home: /
-  About: /about/
-  Writing: /archives/
-  Projects: http://github.com/probberechts
+  home: /
+  about: /about/
+  articles: /archives/
+  projects: http://github.com/probberechts
   LINK_NAME: URL
 ```
-
 
 ### Blog posts list on home page
 
@@ -137,7 +156,6 @@ You have two options for the list of blog posts on the home page:
       show_all_posts: true
     ```
 
-
 ### Projects list
 
 Create a projects file `source/_data/projects.json` to show a list of your projects on the index page.
@@ -156,7 +174,6 @@ Create a projects file `source/_data/projects.json` to show a list of your proje
     }
 ]
 ```
-
 
 ### Social media links
 
@@ -214,9 +231,10 @@ Otherwise, you can follow the steps below (E.g., to add a Japanese (ja) translat
 **Note: Cactus does not support multi-language sites.**
 
 ### RTL support
+
 This theme support RTL languages for Persian and Arabic language.
 If you would like to use RTL layout, change `direction` attribute in `_config.yml` to `rtl`.
-Note that this also will change the font to [Vazir](https://github.com/rastikerdar/vazir-font), wich is a Persian font.
+Note that this also will change the font to [Vazir](https://github.com/rastikerdar/vazir-font), which is a Persian font.
 
 ```
 direction: rtl
@@ -230,10 +248,9 @@ Set the `rss` field in the `_config.yml` to one of the following values:
 2. `rss: atom.xml` sets a specific feed link.
 3. `rss:`leave empty to use the [hexo-generator-feed](https://github.com/hexojs/hexo-generator-feed) plugin.
 
-
 ### Analytics
 
-Add you Google Analytics or Baidu Tongji `tracking_id` to the `_config.yml`.
+Add you Google, Baidu, Cloudflare or Umami Analytics `tracking_id` to the `_config.yml`.
 
 ```yml
 google_analytics:
@@ -243,10 +260,46 @@ google_analytics:
 baidu_analytics:
   enabled: true
   id: 2e6da3c375c8a87f5b664cea6d4cb29c
+
+cloudflare_analytics:
+  enabled: true
+  id: 0dabb6e21848405483a237e6a7b6ed04
+
+umami_analytics:
+  enabled: false
+  id: e77e68be-f6e4-4br3-9365-2b76b57cd571
+  host: https://analytics.domain.com
 ```
 
+### CDN
+
+Load Javascript and CSS resources from a CDN. Enabled by default, loads all resources from [cdnjs](https://cdnjs.com/).
+
+```yml
+cdn:
+  enable: true
+  jquery: 'url'
+  clipboard: 'url'
+  font_awesome: 'url'
+  justified_gallery_css: 'url'
+  justified_gallery_js: 'url'
+```
+
+Set `enable: false` to completely disable CDN and load all resources from your domain. If you want to disable it only for specific resource(s) then just remove the corresponding entry(s).
+
+```yml
+cdn:
+  enable: true
+  jquery: 'url'
+```
+
+Only JQuery will be loaded from the specified CDN.
 
 ### Comments
+
+Cactus supports two commenting systems: [Disqus](https://disqus.com) and [Utterances](https://utteranc.es).
+
+#### Disqus
 
 First, create a site on Disqus: [https://disqus.com/admin/create/](http://disqus.com/admin/create/).
 
@@ -260,6 +313,27 @@ disqus:
 
 where `SITENAME` is the name you gave your site on Disqus.
 
+#### Utterances
+
+First, follow the instructions on the [oficial website](https://utteranc.es/) to setup an issue tracker Utterances will connect to.
+
+Next, update the `_config.yml` file:
+
+```yml
+utteranc:
+  enabled: true
+  repo: owner/githubrepo
+  issue_term: pathname
+  label: utteranc
+  theme: themename
+```
+
+where each of the parameters are the respective values ​​provided during the configuration of the Utterances:
+
+* `repo`:  the repository Utterances will connect to.
+* `issue_term`: the mapping between blog posts and GitHub issues.
+* `label`: the label that will be assigned to issues created by Utterances
+* `theme`: the selected Utterances theme.
 
 ### Code Highlighting
 
@@ -270,6 +344,7 @@ highlight: COLORSCHEME_NAME
 ```
 
 ### Tags and categories
+
 Tags and categories can be included in the front-matter of your posts. For example:
 
 ```markdown
@@ -306,10 +381,9 @@ Finally, don't forget to create a link to these pages, for example in the naviga
 
 ```yml
 nav:
-  tags: /tags/
-  categories: /categories/
+  tag: /tags/
+  category: /categories/
 ```
-
 
 ### Local search
 
@@ -325,6 +399,7 @@ Next, create a page to display the search engine:
 ```sh
 $ hexo new page search
 ```
+
 and put `type: search` in the front-matter.
 
 ```markdown
@@ -340,6 +415,6 @@ nav:
   search: /search/
 ```
 
-
 ## License
+
 MIT

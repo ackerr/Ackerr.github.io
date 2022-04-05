@@ -1,9 +1,25 @@
 <!-- jquery -->
-<%- js('lib/jquery/jquery.min') %>
-<%- js('lib/justified-gallery/js/jquery.justifiedGallery.min.js') %>
+<% if (isCdnEnable('jquery')) {%> 
+  <%- getCdnScript('jquery') %> 
+<% } else { %> 
+  <%- js('lib/jquery/jquery.min') %>
+<% } %>
+
+<% if (page.photos && page.photos.length) { %>
+  <% if (isCdnEnable('justified_gallery_js')) {%>
+    <%- getCdnScript('justified_gallery_js') %> 
+  <% } else { %> 
+    <%- js('lib/justified-gallery/js/jquery.justifiedGallery.min.js') %>
+  <% } %> 
+<% } %>
+
 <!-- clipboard -->
 <% if (is_post()){ %>
-  <%- js('lib/clipboard/clipboard.min') %>
+  <% if (isCdnEnable('clipboard')) { %>
+    <%- getCdnScript('clipboard') %> 
+  <% } else { %> 
+    <%- js('lib/clipboard/clipboard.min') %>
+  <% } %>
   <script type="text/javascript">
   $(function() {
     // copy-btn HTML
@@ -66,29 +82,36 @@
 <% } %>
 <!-- Google Analytics -->
 <% if (theme.google_analytics.enabled && theme.google_analytics.id){ %>
-    <script type="text/javascript">
-        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-        ga('create', '<%= theme.google_analytics.id %>', 'auto');
-        ga('send', 'pageview');
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<%= theme.google_analytics.id %>"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '<%= theme.google_analytics.id %>');
     </script>
 <% } %>
 <!-- Baidu Analytics -->
 <% if (theme.baidu_analytics.enabled && theme.baidu_analytics.id){ %>
-    <script type="text/javascript">
+  <script type="text/javascript">
         var _hmt = _hmt || [];
         (function() {
-            var hm = document.createElement("script");
-            hm.src = "https://hm.baidu.com/hm.js?<%= theme.baidu_analytics.id %>";
-            var s = document.getElementsByTagName("script")[0];
-            s.parentNode.insertBefore(hm, s);
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?<%= theme.baidu_analytics.id %>";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
         })();
-    </script>
+        </script>
+<% } %>
+<!-- Cloudflare Analytics -->
+<% if (theme.cloudflare_analytics.enabled && theme.cloudflare_analytics.id){ %>
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "<%= theme.cloudflare_analytics.id %>"}'></script>
+<% } %>
+<!-- Umami Analytics -->
+<% if (theme.umami_analytics.enabled && theme.umami_analytics.id && theme.umami_analytics.host){ %>
+  <script async defer data-website-id="<%= theme.umami_analytics.id %>" src="<%= theme.umami_analytics.host %>/umami.js"></script>
 <% } %>
 <!-- Disqus Comments -->
-<% if (theme.disqus.enabled && theme.disqus.shortname){ %>
+<% if (page.comments && theme.disqus.enabled && theme.disqus.shortname){ %>
     <script type="text/javascript">
         var disqus_shortname = '<%= theme.disqus.shortname %>';
 
@@ -100,4 +123,26 @@
             (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
         }());
     </script>
+<% } %>
+<!-- utterances Comments -->
+<% if (page.comments && theme.utterances.enabled && theme.utterances.repo && theme.utterances.issue_term && theme.utterances.theme){ %>
+    <script type="text/javascript">
+      var utterances_repo = '<%= theme.utterances.repo %>';
+      var utterances_issue_term = '<%= theme.utterances.issue_term %>';
+      var utterances_label = '<%= theme.utterances.label %>';
+      var utterances_theme = '<%= theme.utterances.theme %>';
+
+      (function(){
+          var script = document.createElement('script');
+
+          script.src = 'https://utteranc.es/client.js';
+          script.setAttribute('repo', utterances_repo);
+          script.setAttribute('issue-term', 'pathname');
+          script.setAttribute('label', utterances_label);
+          script.setAttribute('theme', utterances_theme);
+          script.setAttribute('crossorigin', 'anonymous');
+          script.async = true;
+          (document.getElementById('utterances_thread')).appendChild(script);
+      }());
+  </script>
 <% } %>

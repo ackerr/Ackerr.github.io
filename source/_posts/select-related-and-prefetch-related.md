@@ -83,11 +83,11 @@ LOGGING = {
 
 优化：
 
-![优化](https://picture.wzmmmmj.com/use_select_related.png)
+![优化](/images/use_select_related.png)
 
 未优化：
 
-![未优化](https://picture.wzmmmmj.com/no_use_select_related.png)
+![未优化](/images/no_use_select_related.png)
 
 
 
@@ -140,11 +140,11 @@ Store = Store.objects.all().prefetch_related('books')
 
 优化：
 
-![优化](https://picture.wzmmmmj.com/use_prefetch_related.png)
+![优化](/images/use_prefetch_related.png)
 
 未优化：
 
-![未优化](https://picture.wzmmmmj.com/no_use_prefetch_related.png)
+![未优化](/images/no_use_prefetch_related.png)
 
 通过看使用`prefetch_related`的查询SQL，可以发现在第二查询的时候，加了WHERE 条件`where store.id in (1,2,3)`，从而查库1+1次，而不是未使用优化时，每次遇到`store.books.all()`，才去查库，导致查库1+3次。
 

@@ -19,7 +19,7 @@ categories:
 
 <!-- more -->
 
-![](https://picture.wzmmmmj.com/star-trending.png)
+![](/images/star-trending.png)
 
 
 ## trailing comma
@@ -38,7 +38,7 @@ ImportantClass.important_method(
 )
 ```
 
-结果就是，被`flake8-comma`爆锤`C812 missing trailing comma`，不过[解决办法](https://github.com/python/black/issues/551)也很简单，就是移除`flake8-comma`![](https://picture.wzmmmmj.com/commas.png)
+结果就是，被`flake8-comma`爆锤`C812 missing trailing comma`，不过[解决办法](https://github.com/python/black/issues/551)也很简单，就是移除`flake8-comma`![](/images/commas.png)
 
 ## indentation
 
@@ -85,7 +85,7 @@ def very_important_function(
 
 不过前提是需要全局`disable bad-continuation` ( [issue](https://github.com/python/black/issues/48)) 
 
-![](https://picture.wzmmmmj.com/continuation.png)
+![](/images/continuation.png)
 
 ## line breaks &&  slices
 
@@ -96,7 +96,7 @@ def very_important_function(
 
 解决办法依旧是[ignore](https://github.com/python/black#line-breaks--binary-operators)。
 
-![](https://picture.wzmmmmj.com/slice.png)
+![](/images/slice.png)
 
 ## 总结
 

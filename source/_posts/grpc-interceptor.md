@@ -274,7 +274,7 @@ func streaming(client pb.BaseServiceClient) error {
 
 rpc目录下依次执行`go run server/main.go` 和 `go run client/main.go`，输出效果如下
 
-![输出结果](https://picture.wzmmmmj.com/grpc-interceptor.png)
+![输出结果](/images/grpc-interceptor.png)
 
 可以明显看出StreamClientInterceptor则是在流处理开始时就输出了两次日志，其余三种拦截器则在请求前后输出两次。
 

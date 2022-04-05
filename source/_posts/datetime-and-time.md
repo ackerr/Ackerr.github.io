@@ -66,7 +66,7 @@ struct_time = time.strptime(str_time, "%Y-%m-%d, %H:%M:%S, %w")  # 两个参数�
 
 >  参考下图食用更佳
 
-![一张图看懂时间类型转化](https://picture.wzmmmmj.com/time.jpg)
+![一张图看懂时间类型转化](/images/time.jpg)
 
 
 

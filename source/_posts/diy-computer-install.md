@@ -9,9 +9,9 @@ tags:
 
 按照惯例，先展示包装（空壳）全家福以及机箱图
 
-![包装图](https://picture.wzmmmmj.com/diy-setup-1.png)
+![包装图](/images/diy-setup-1.png)
 
-![开机机箱图](https://picture.wzmmmmj.com/diy-setup-2.png)
+![开机机箱图](/images/diy-setup-2.png)
 
 > 风扇没有RGB感觉还是差点意思
 
@@ -43,7 +43,7 @@ tags:
 
 修改设置重启后，正常情况下就会进入安装系统的傻瓜界面了。
 
-![BIOS](https://picture.wzmmmmj.com/diy-setup-3.png)
+![BIOS](/images/diy-setup-3.png)
 
 小弟第一次到这步时，启动后长时间停留在logo界面，原本以为是正常现象，结果出门吃个饭回来还在logo界面。刚开始以为是固态问题，因为BIOS中主板没有识别出固态，如上图，截图给固态客服后，发现设置并没有什么问题。尝试取下固态再安装，折腾了半天还是识别不了，一度让我以为固态有问题，差点去退货了。而后又去问了主板客服，让我尝试**升级主板BIOS**，通过官网中下载新的主板BIOS版本至u盘中，并在BIOS中加载该版本。一顿操作之后，终于识别出固态。 
 
@@ -53,11 +53,11 @@ tags:
 
 理线前：
 
-![理线前](https://picture.wzmmmmj.com/diy-setup-4.png)
+![理线前](/images/diy-setup-4.png)
 
 理线后：
 
-![理线后](https://picture.wzmmmmj.com/diy-setup-5.png)
+![理线后](/images/diy-setup-5.png)
 
 最后附上一篇个人感觉还不错的[理线教程](https://zhuanlan.zhihu.com/p/129807679)
 

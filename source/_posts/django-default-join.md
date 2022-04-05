@@ -22,7 +22,7 @@ categories:
 
 <!--more-->
 
-![](https://picture.wzmmmmj.com/sql.jpg)
+![](/images/sql.jpg)
 
 ### Django ORM的JOIN操作
 

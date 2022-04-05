@@ -13,7 +13,7 @@ Vim中的buffer，tab和window是容易混淆的概念，vim中输入`:help wind
 > A tab page is a collection of windows.
 
 对于常用IDE的同学，如果把这几个概念带入IDE中，常会摸不着头脑 ~~比如我~~。对照下图，应该更容易理解
-![Tabs Windows Buffers](https://picture.wzmmmmj.com/vim-tabs-windows-buffers.jpg)
+![Tabs Windows Buffers](/images/vim-tabs-windows-buffers.jpg)
 
 <!--more-->
 

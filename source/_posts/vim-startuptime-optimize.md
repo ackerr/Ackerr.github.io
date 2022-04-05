@@ -54,7 +54,7 @@ Plug 'tweekmonster/startuptime.vim'
 
 `startuptime.vim`会对当前文件多次启动，标记启动最慢的一些插件以及输出每个步骤的耗时，安装插件后，通过使用`:StartupTime`，输出startup-log，如图：
 
-![startuptime.vim](https://picture.wzmmmmj.com/startuptime.vim.png)
+![startuptime.vim](/images/startuptime.vim.png)
 
 ### vim-startuptime
 
@@ -64,7 +64,7 @@ Plug 'dstein64/vim-startuptime'
 
 `vim-startuptime`会返回启动时各个操作之间耗时以及百分比，同样使用`:StartupTime`，输出如图：
 
-![vim-startuptime](https://picture.wzmmmmj.com/vim-startuptime.png)
+![vim-startuptime](/images/vim-startuptime.png)
 
 ### 发现问题
 
@@ -133,7 +133,7 @@ Plug 'mengelbrecht/lightline-bufferline'
 
 如图为使用lightline.vim的statusline，以及配置对比
 
-![lightline.vim](https://picture.wzmmmmj.com/lightline.vim.png)
+![lightline.vim](/images/lightline.vim.png)
 
 再次使用`startuptime.vim` 以及`vim --startuptime time.log a.py`，输出如下
 

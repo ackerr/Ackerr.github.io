@@ -17,7 +17,7 @@ nav:
   home: /
   about: /about/
   articles: /archives/
-  projects: projects_url
+  projects: http://github.com/probberechts
 
 
 # Links to your social media accounts.
@@ -76,12 +76,14 @@ copyright:
 #   - height: height of the logo in pixel units
 #   - url: where the logo can be found
 #   - gravatar: whether to use your Gravatar as the logo
+#   - grayout: whether to enable a hover effect on the logo
 logo:
   enabled: true
   width: 50
   height: 50
   url: /images/logo.png
   gravatar: false
+  grayout: true
 
 # Customize the favicons.
 # Cactus supports a limited set of the three most important icons:
@@ -135,10 +137,22 @@ open_graph:
 # Plugins
 ##############################################################################
 
+# Enable MathJax support for Latex
+mathjax:
+  enabled: false
+  
 # Fill in your Disqus Comments Shortname to enable Disqus comments.
 disqus:
   enabled: false
   shortname: cactus-1
+
+# Fill in your Utterances data to enable Utterances comments
+utterances:
+  enabled: false
+  repo: owner/githubrepo
+  issue_term: pathname
+  label: Comment
+  theme: github-dark
 
 # Fill in your Google Analytics tracking ID to enable Google Analytics.
 google_analytics:
@@ -150,7 +164,29 @@ baidu_analytics:
   enabled: false
   id: 2e6da3c375c8a87f5b664cea6d4cb29c
 
-# Fill in you Gravatar user id / email if you want to use your gravatar as the
+# Fill in your Cloudflare Analytics tracking ID to enable Cloudflare Analytics.
+cloudflare_analytics:
+  enabled: false
+  id: 0dabb6e21848405483a237e6a7b6ed04
+
+# Fill in your Umami Analytics tracking ID to enable Umami Analytics.
+umami_analytics:
+  enabled: false
+  id: e77e68be-f6e4-4br3-9365-2b76b57cd571
+  host: https://analytics.domain.com
+
+# Fill in you Gravatar email or hash if you want to use your gravatar as the
 # logo and/or favicons of you website.
+# To generate hash: `$ echo -n "name@email.com" | md5`.
 gravatar:
   email: name@email.com
+  hash: d41d8cd98f00b204e9800998ecf8427e
+
+# loads libraries and styles from CDN instead or relying on local files
+cdn:
+  enable: true
+  jquery: https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js
+  clipboard: https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js
+  font_awesome: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css
+  justified_gallery_css: https://cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.8.1/css/justifiedGallery.min.css
+  justified_gallery_js: https://cdnjs.cloudflare.com/ajax/libs/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js

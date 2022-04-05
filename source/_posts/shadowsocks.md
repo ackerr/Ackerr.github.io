@@ -41,11 +41,11 @@ pip install shadowsocks
 
 - 在安装pip时遇到`ImportError:cannot import name main`的报错 
 
-![解决方法](https://picture.wzmmmmj.com/shadowsocks1.png)
+![解决方法](/images/shadowsocks1.png)
 
 - pip install 时遇到`locale.Error: unsupported locale setting`报错 
 
-![解决办法](https://picture.wzmmmmj.com/shadowsocks2.png)
+![解决办法](/images/shadowsocks2.png)
 
 
 
