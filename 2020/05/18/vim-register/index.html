@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="刚接触vim时，相信多多少少都会遇到关于复制粘贴的问题，例如以下两个问题  Vim编辑的内容如何复制到其他地方？ Vim中如何复制(y)一段内容后，多次复用，而不会被替换内容覆盖？  其实这些问题都可能跟Vim中的寄存器有关，寄存器可以想象成内存中存储某些文本的空间，类似于粘贴板。在使用y，p，d等命令时，都会不经意间的操作Vim的寄存器。 基本用法Normal模式下，使用&quot;{regis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vim中的寄存器：Register">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/05/18/vim-register/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="刚接触vim时，相信多多少少都会遇到关于复制粘贴的问题，例如以下两个问题  Vim编辑的内容如何复制到其他地方？ Vim中如何复制(y)一段内容后，多次复用，而不会被替换内容覆盖？  其实这些问题都可能跟Vim中的寄存器有关，寄存器可以想象成内存中存储某些文本的空间，类似于粘贴板。在使用y，p，d等命令时，都会不经意间的操作Vim的寄存器。 基本用法Normal模式下，使用&quot;{regis">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-05-18T00:27:57.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="vim">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>Vim中的寄存器：Register</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/07/12/redis-sds/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/03/28/vim-startuptime-optimize/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/05/18/vim-register/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&text=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&is_video=false&description=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Vim中的寄存器：Register&body=Check out this article: https://www.wzmmmmj.com/2020/05/18/vim-register/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&name=Vim中的寄存器：Register&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/05/18/vim-register/&t=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#基本用法"><span class="toc-number">1.</span> <span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#寄存器类型"><span class="toc-number">2.</span> <span class="toc-text">寄存器类型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#匿名寄存器"><span class="toc-number">2.0.1.</span> <span class="toc-text">匿名寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#数字寄存器"><span class="toc-number">2.0.2.</span> <span class="toc-text">数字寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#短删除寄存器"><span class="toc-number">2.0.3.</span> <span class="toc-text">短删除寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#具名寄存器"><span class="toc-number">2.0.4.</span> <span class="toc-text">具名寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#只读寄存器"><span class="toc-number">2.0.5.</span> <span class="toc-text">只读寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#交替文件寄存器"><span class="toc-number">2.0.6.</span> <span class="toc-text">交替文件寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#表达式寄存器"><span class="toc-number">2.0.7.</span> <span class="toc-text">表达式寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#选择拖入寄存器"><span class="toc-number">2.0.8.</span> <span class="toc-text">选择拖入寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#黑洞寄存器"><span class="toc-number">2.0.9.</span> <span class="toc-text">黑洞寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#搜索寄存器"><span class="toc-number">2.0.10.</span> <span class="toc-text">搜索寄存器</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">3.</span> <span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">4.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Vim中的寄存器：Register
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-05-18T00:27:57.000Z" itemprop="datePublished">2020/05/18</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/vim/" rel="tag">vim</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>刚接触vim时，相信多多少少都会遇到关于复制粘贴的问题，例如以下两个问题</p>
+<ol>
+<li>Vim编辑的内容如何复制到其他地方？</li>
+<li>Vim中如何复制(y)一段内容后，多次复用，而不会被替换内容覆盖？</li>
+</ol>
+<p>其实这些问题都可能跟Vim中的寄存器有关，寄存器可以想象成内存中存储某些文本的空间，类似于粘贴板。在使用<code>y</code>，<code>p</code>，<code>d</code>等命令时，都会不经意间的操作Vim的寄存器。</p>
+<h2 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h2><p>Normal模式下，使用<code>&quot;{register}{command}</code>，  例如<code>&quot;add</code>，表示删除当前行内容，并将内容保存至<code>&quot;a</code>寄存器中，而使用<code>&quot;ap</code>，则可以粘贴<code>&quot;a</code>寄存器中的内容。而插入模式下，使用<code>ctrl-r a</code>来表示粘贴<code>&quot;a</code>寄存器中的内容。</p>
+<p>Vim中输入<code>:register</code>，会输出使用中的寄存器以及其保存的值，或者<code>:register x</code>指定输出某些寄存器。</p>
+<h2 id="寄存器类型"><a href="#寄存器类型" class="headerlink" title="寄存器类型"></a>寄存器类型</h2><p>Vim中输入 <code>:help registers</code>，其中介绍了vim中10种类型的寄存器</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">There are ten types of registers:		*registers* *&#123;register&#125;* *E354*</span><br><span class="line">1. The unnamed register &quot;&quot;</span><br><span class="line">2. 10 numbered registers &quot;0 to &quot;9</span><br><span class="line">3. The small delete register &quot;-</span><br><span class="line">4. 26 named registers &quot;a to &quot;z or &quot;A to &quot;Z</span><br><span class="line">5. Three read-only registers &quot;:, &quot;., &quot;%</span><br><span class="line">6. Alternate buffer register &quot;#</span><br><span class="line">7. The expression register &quot;&#x3D;</span><br><span class="line">8. The selection and drop registers &quot;*, &quot;+ and &quot;~</span><br><span class="line">9. The black hole register &quot;_</span><br><span class="line">10. Last search pattern register &quot;&#x2F;</span><br></pre></td></tr></table></figure>
+
+<h4 id="匿名寄存器"><a href="#匿名寄存器" class="headerlink" title="匿名寄存器"></a>匿名寄存器</h4><p>当使用<code>d</code>，<code>c</code>，<code>s</code>，<code>x</code>，<code>y</code>等操作时，内容会存储在匿名寄存器<code>&quot;&quot;</code>中，如果操作指定寄存器<code>&quot;add</code>，除了<code>&quot;a</code>寄存器，内容也会存入匿名寄存器中。p(aste)默认使用匿名寄存器。</p>
+<h4 id="数字寄存器"><a href="#数字寄存器" class="headerlink" title="数字寄存器"></a>数字寄存器</h4><p>“0至”9，其中”0会保留最近一次复制的内容，而”1至 “9则会保存最近9次删除操作的内容。当指定拷贝操作的寄存器时，不会写入”0中，但删除操作一定会写入”1中。使用y(ank)命令未指定寄存器时，会将内容保存至”0寄存器，同时””具有相同的内容。</p>
+<h4 id="短删除寄存器"><a href="#短删除寄存器" class="headerlink" title="短删除寄存器"></a>短删除寄存器</h4><p>顾名思义，对于少于一行的内容操作，除非指定寄存器，否则内容都会被存入 <code>&quot;-</code> 寄存器中。</p>
+<h4 id="具名寄存器"><a href="#具名寄存器" class="headerlink" title="具名寄存器"></a>具名寄存器</h4><p>通过26个英文字母，指定寄存器，例如”add ，如果原有”a寄存器中含有内容，则会被覆盖，而执行”Add则会在原有内容后追加内容。</p>
+<h4 id="只读寄存器"><a href="#只读寄存器" class="headerlink" title="只读寄存器"></a>只读寄存器</h4><p><code>&quot;:, &quot;., &quot;%</code>，这三种寄存器读取内容，其中<code>&quot;:</code>  表示上次执行的命令行，<code>&quot;%</code> 表示当前编辑文件名，<code>&quot;.</code>  表示最近插入的内容。</p>
+<h4 id="交替文件寄存器"><a href="#交替文件寄存器" class="headerlink" title="交替文件寄存器"></a>交替文件寄存器</h4><p>一般我们会使用<code>ctrl-^</code>来回切换buffer，其中原理则是在<code>&quot;#</code>寄存器中存放交替文件。</p>
+<h4 id="表达式寄存器"><a href="#表达式寄存器" class="headerlink" title="表达式寄存器"></a>表达式寄存器</h4><p>normal模式下，输入<code>&quot;=</code>，在命令行中输入任何Vim script的表达式，通过使用p(aste)，插入表达式结果。</p>
+<h4 id="选择拖入寄存器"><a href="#选择拖入寄存器" class="headerlink" title="选择拖入寄存器"></a>选择拖入寄存器</h4><p><code>&quot;*</code> 与 <code>&quot;+</code> 寄存器, 对于maxOS与windows系统都可以表示为系统粘贴板，而在linux中，会有两种不同的意义，使用<code>&quot;+yy</code>，则可以将vim中的文本，粘贴至其他程序，其他程序复制的内容，也会同步到该寄存器中。而当有文本被拖入Vim中时，文本将会存储在<code>&quot;~</code>寄存器中</p>
+<h4 id="黑洞寄存器"><a href="#黑洞寄存器" class="headerlink" title="黑洞寄存器"></a>黑洞寄存器</h4><p><code>&quot;_</code> 对于所有删除或拷贝到该寄存器的内容，都会消失，从而不会影响其他寄存器；例如删除操作，会影响其他数字寄存器，导致原”9寄存器内容被覆盖，而复制操作，则会改变”0寄存器。</p>
+<h4 id="搜索寄存器"><a href="#搜索寄存器" class="headerlink" title="搜索寄存器"></a>搜索寄存器</h4><p>normal模式下，通过<code>/{something}</code>搜索，最近一次的关键词会被存放在<code>&quot;/</code>寄存器中。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>通过简单了解vim中所有类型的寄存器，大致能解答文章开头的两个问题，也可以实现更多的骚操作。</p>
+<p><strong>Vim编辑的内容如何复制到其他地方？</strong></p>
+<p>通过”+ 或 “* 寄存器，使用系统粘贴板，当然也可以通过设置</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set clipboard=unnamed</span><br></pre></td></tr></table></figure>
+
+<p><strong>Vim中如何复制一段内容后，多次复用，而不会被替换内容覆盖？</strong></p>
+<p>前文讲到数字寄存器，复制操作时，会保存内容至匿名寄存器以及”0寄存器，而在每次删除操作时，会更新”1-“9寄存器以及匿名寄存器，而p(aste)时，会使用匿名寄存器，所以如果p(aste)操作时，如果有替换内容，匿名寄存器内容会变为替换的内容，不过”0寄存器还是最近一次y(arn)的内容，所以可以使用<code>&quot;0p</code>。或者设置一个map</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xnoremap p "0p</span><br></pre></td></tr></table></figure>
+
+<p>不过这样会导致 d(elete)操作的内容无法被p(aste)使用，所以只需要使用p(aste)时，替换内容不覆盖匿名寄存器即可。前文有讲到黑洞寄存器<code>&quot;_</code>，不保留不需要的内容，所以我们只需要魔改p(aste)操作，将替换内容删除至黑洞寄存器中，再粘贴内容即可。map如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xnoremap p "_dP  # 这里因为先删除，所以需要使用大写P</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><blockquote>
+<p><a href="http://einverne.github.io/post/2017/11/vim-registers.html" target="_blank" rel="noopener">http://einverne.github.io/post/2017/11/vim-registers.html</a></p>
+<p>vim  :help registers</p>
+</blockquote>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#基本用法"><span class="toc-number">1.</span> <span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#寄存器类型"><span class="toc-number">2.</span> <span class="toc-text">寄存器类型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#匿名寄存器"><span class="toc-number">2.0.1.</span> <span class="toc-text">匿名寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#数字寄存器"><span class="toc-number">2.0.2.</span> <span class="toc-text">数字寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#短删除寄存器"><span class="toc-number">2.0.3.</span> <span class="toc-text">短删除寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#具名寄存器"><span class="toc-number">2.0.4.</span> <span class="toc-text">具名寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#只读寄存器"><span class="toc-number">2.0.5.</span> <span class="toc-text">只读寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#交替文件寄存器"><span class="toc-number">2.0.6.</span> <span class="toc-text">交替文件寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#表达式寄存器"><span class="toc-number">2.0.7.</span> <span class="toc-text">表达式寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#选择拖入寄存器"><span class="toc-number">2.0.8.</span> <span class="toc-text">选择拖入寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#黑洞寄存器"><span class="toc-number">2.0.9.</span> <span class="toc-text">黑洞寄存器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#搜索寄存器"><span class="toc-number">2.0.10.</span> <span class="toc-text">搜索寄存器</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">3.</span> <span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">4.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/05/18/vim-register/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&text=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&is_video=false&description=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Vim中的寄存器：Register&body=Check out this article: https://www.wzmmmmj.com/2020/05/18/vim-register/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&title=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/05/18/vim-register/&name=Vim中的寄存器：Register&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/05/18/vim-register/&t=Vim中的寄存器：Register" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

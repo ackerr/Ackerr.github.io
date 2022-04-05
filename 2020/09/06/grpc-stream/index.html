@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="HTTP&#x2F;2中有两个概念，流（stream）与帧（frame），其中帧作为HTTP&#x2F;2中通信的最小传输单位，通常一个请求或响应会被分为一个或多个帧传输，流则表示已建立连接的虚拟通道，可以传输多次请求或响应。每个帧中包含Stream Identifier，标志所属流。HTTP&#x2F;2通过流与帧实现多路复用，对于相同域名的请求，通过Stream Identifier标识可在同一个流中进行，从而减少连接开销">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gRPC之stream">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/09/06/grpc-stream/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="HTTP&#x2F;2中有两个概念，流（stream）与帧（frame），其中帧作为HTTP&#x2F;2中通信的最小传输单位，通常一个请求或响应会被分为一个或多个帧传输，流则表示已建立连接的虚拟通道，可以传输多次请求或响应。每个帧中包含Stream Identifier，标志所属流。HTTP&#x2F;2通过流与帧实现多路复用，对于相同域名的请求，通过Stream Identifier标识可在同一个流中进行，从而减少连接开销">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-09-06T23:48:06.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="gRPC">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>gRPC之stream</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/09/20/git-open/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/08/23/rpc-and-grpc/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/09/06/grpc-stream/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&text=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&is_video=false&description=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=gRPC之stream&body=Check out this article: https://www.wzmmmmj.com/2020/09/06/grpc-stream/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&name=gRPC之stream&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&t=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Proto"><span class="toc-number">1.</span> <span class="toc-text">Proto</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#基础代码"><span class="toc-number">2.</span> <span class="toc-text">基础代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#服务端流式响应"><span class="toc-number">3.</span> <span class="toc-text">服务端流式响应</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#客户端流式请求"><span class="toc-number">4.</span> <span class="toc-text">客户端流式请求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#双向流式"><span class="toc-number">5.</span> <span class="toc-text">双向流式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">6.</span> <span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">7.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        gRPC之stream
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-09-06T23:48:06.000Z" itemprop="datePublished">2020/09/06</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/gRPC/">gRPC</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/gRPC/" rel="tag">gRPC</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>HTTP/2中有两个概念，流（stream）与帧（frame），其中帧作为HTTP/2中通信的最小传输单位，通常一个请求或响应会被分为一个或多个帧传输，流则表示已建立连接的虚拟通道，可以传输多次请求或响应。每个帧中包含<strong>Stream Identifier</strong>，标志所属流。HTTP/2通过流与帧实现多路复用，对于相同域名的请求，通过<strong>Stream Identifier</strong>标识可在同一个流中进行，从而减少连接开销。 而gRPC基于HTTP/2协议传输，自然而然也实现了流式传输，其中gRPC中共有以下三种类型的流</p>
+<ol>
+<li>服务端流式响应</li>
+<li>客户端流式请求</li>
+<li>两端双向流式</li>
+</ol>
+<p>本篇主要讲讲如何实现gRPC三种流式处理。</p>
+<h2 id="Proto"><a href="#Proto" class="headerlink" title="Proto"></a>Proto</h2><p>通过在请求体或响应体前添加关键词<code>stream</code>，即可定义该消息体为流传输，<code>base.proto</code>如下所示</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">"proto3"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> proto;</span><br><span class="line"></span><br><span class="line"><span class="keyword">option</span> go_package = <span class="string">"base;base"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">BaseService</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 服务端流式响应</span></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> ServerStream (StreamRequest) <span class="keyword">returns</span> (stream StreamResponse)&#123;&#125;</span></span><br><span class="line"><span class="function">    // 客户端流式请求</span></span><br><span class="line"><span class="function">    <span class="keyword">rpc</span> ClientStream (stream StreamRequest) <span class="keyword">returns</span> (StreamResponse)&#123;&#125;</span></span><br><span class="line"><span class="function">    // 双向流式</span></span><br><span class="line"><span class="function">    <span class="keyword">rpc</span> Streaming (stream StreamRequest) <span class="keyword">returns</span> (stream StreamResponse)&#123;&#125;</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">message StreamRequest&#123;</span></span><br><span class="line"><span class="function">  string input = 1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StreamResponse</span></span>&#123;</span><br><span class="line">  <span class="built_in">string</span> output = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行<code>protoc --go_out=. --go-grpc_out=. stream.prto</code>，生成对应的Go Stub。</p>
+<h2 id="基础代码"><a href="#基础代码" class="headerlink" title="基础代码"></a>基础代码</h2><p>这里先将附上代码模板<br>server.go</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"net"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line"></span><br><span class="line">	pb <span class="string">"rpc/base"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">	<span class="string">"google.golang.org/grpc/reflection"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> service <span class="keyword">struct</span> &#123;</span><br><span class="line">	pb.UnimplementedBaseServiceServer</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	listen, err := net.Listen(<span class="string">"tcp"</span>, <span class="string">":50051"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">	s := grpc.NewServer()</span><br><span class="line">	reflection.Register(s)</span><br><span class="line">	pb.RegisterBaseServiceServer(s, &amp;service&#123;&#125;)</span><br><span class="line">	s.Serve(listen)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">ClientStream</span><span class="params">(stream pb.BaseService_ClientStreamServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span> </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">ServerStream</span><span class="params">(in *pb.StreamRequest, stream pb.BaseService_ServerStreamServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">Streaming</span><span class="params">(stream pb.BaseService_StreamingServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>client.go</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"io"</span></span><br><span class="line">	<span class="string">"strconv"</span></span><br><span class="line"></span><br><span class="line">	pb <span class="string">"rpc/base"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	conn, err := grpc.Dial(<span class="string">":50051"</span>, grpc.WithInsecure(), grpc.WithBlock())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">	c := pb.NewBaseServiceClient(conn)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">clientStream</span><span class="params">(client pb.BaseServiceClient, input <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">serverStream</span><span class="params">(client pb.BaseServiceClient, r *pb.StreamRequest)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stream</span><span class="params">(client pb.BaseServiceClient)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="服务端流式响应"><a href="#服务端流式响应" class="headerlink" title="服务端流式响应"></a>服务端流式响应</h2><p>与普通的gRPC代码不同的是，普通gRPC一次请求只会返回一次响应，而服务端流式响应通过调用<code>stream.Send()</code>，返回多次``StreamResponse`</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 服务端</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">ServerStream</span><span class="params">(in *pb.StreamRequest, stream pb.BaseService_ServerStreamServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    input := in.Input</span><br><span class="line">    <span class="keyword">var</span> output <span class="keyword">string</span></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(input); i++ &#123;</span><br><span class="line">      	output = fmt.Sprintf(<span class="string">"index: %d, result: %s"</span>, i, <span class="keyword">string</span>(input[i]))</span><br><span class="line">     		stream.Send(&amp;pb.StreamResponse&#123;Output: output&#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>客户端代码如下，通过for循环调用<code>stream.Recv()</code>，等待接收服务端响应并阻塞，直到出错或流结束。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 客户端</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">serverStream</span><span class="params">(client pb.BaseServiceClient, r *pb.StreamRequest)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">"Server Stream Send:"</span>, r.Input)</span><br><span class="line">    stream, _ := client.ServerStream(context.Background(), r)</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        res, err := stream.Recv()</span><br><span class="line">        <span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Println(<span class="string">"Server Stream Recv:"</span>, res.Output)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>启动服务端，客户端执行<code>serverStream(c, &amp;pb.StreamRequest{Input: &quot;something&quot;})</code>，输出如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Server Stream Send: something</span><br><span class="line">Server Stream Recv: index: 0, result: s</span><br><span class="line">Server Stream Recv: index: 1, result: o</span><br><span class="line">Server Stream Recv: index: 2, result: m</span><br><span class="line">Server Stream Recv: index: 3, result: e</span><br><span class="line">Server Stream Recv: index: 4, result: t</span><br><span class="line">Server Stream Recv: index: 5, result: h</span><br><span class="line">Server Stream Recv: index: 6, result: i</span><br><span class="line">Server Stream Recv: index: 7, result: n</span><br><span class="line">Server Stream Recv: index: 8, result: g</span><br></pre></td></tr></table></figure>
+
+<p>不难看出，客户端一次请求，服务端将数据多次返回，从而实现服务端流式响应</p>
+<h2 id="客户端流式请求"><a href="#客户端流式请求" class="headerlink" title="客户端流式请求"></a>客户端流式请求</h2><p>与服务端流式响应类似，只不过转变为服务端for循环调用<code>stream.Rece()</code>，接收客户端消息并阻塞，等客户端调用<code>stream.CloseAndRecv()</code>，关闭流的发送后进入阻塞监听，服务端调用<code>stream.SendAndClose()</code>，返回响应体并关闭流。此方式客户端只负责发送流的结束，服务端可以在中途结束整个流处理。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 服务端</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">ClientStream</span><span class="params">(stream pb.BaseService_ClientStreamServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    output := <span class="string">""</span></span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        r, err := stream.Recv()</span><br><span class="line">        <span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">          	<span class="keyword">return</span> stream.SendAndClose(&amp;pb.StreamResponse&#123;Output: output&#125;)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">          	fmt.Println(err)</span><br><span class="line">        &#125;</span><br><span class="line">        output += r.Input</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 客户端</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">clientStream</span><span class="params">(client pb.BaseServiceClient, input <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    stream, _ := client.ClientStream(context.Background())</span><br><span class="line">    <span class="keyword">for</span> _, s := <span class="keyword">range</span> input &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Client Stream Send:"</span>, <span class="keyword">string</span>(s))</span><br><span class="line">        err := stream.Send(&amp;pb.StreamRequest&#123;Input: <span class="keyword">string</span>(s)&#125;)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">       	    <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    res, err := stream.CloseAndRecv()</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">     	  fmt.Println(err)</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">"Client Stream Recv:"</span>, res.Output)</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>客户端执行<code>clientStream(c, &quot;something&quot;)</code>，输出如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Client Stream Send: s</span><br><span class="line">Client Stream Send: o</span><br><span class="line">Client Stream Send: m</span><br><span class="line">Client Stream Send: e</span><br><span class="line">Client Stream Send: t</span><br><span class="line">Client Stream Send: h</span><br><span class="line">Client Stream Send: i</span><br><span class="line">Client Stream Send: n</span><br><span class="line">Client Stream Send: g</span><br><span class="line">Client Stream Recv: something</span><br></pre></td></tr></table></figure>
+
+<h2 id="双向流式"><a href="#双向流式" class="headerlink" title="双向流式"></a>双向流式</h2><p>由客户端发送流式请求，服务端通过流式响应，但具体的交互方式，根据编写的逻辑不同，效果也不同，类似于聊天室，开启聊天室后，怎么回复，回复多少，何时关闭，谁来关闭，根据适用场景而定。以下事例代码，客户端通过发送0-10，服务端累加返回。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 客户端</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">streaming</span><span class="params">(client pb.BaseServiceClient)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    stream, _ := client.Streaming(context.Background())</span><br><span class="line">    <span class="keyword">for</span> n := <span class="number">0</span>; n &lt; <span class="number">10</span>; n++ &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Streaming Send:"</span>, n)</span><br><span class="line">        err := stream.Send(&amp;pb.StreamRequest&#123;Input: strconv.Itoa(n)&#125;)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">        res, err := stream.Recv()</span><br><span class="line">        <span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> err</span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Println(<span class="string">"Streaming Recv:"</span>, res.Output)</span><br><span class="line">    &#125;</span><br><span class="line">    stream.CloseSend()</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 服务端</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">Streaming</span><span class="params">(stream pb.BaseService_StreamingServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> n := <span class="number">0</span>; ; &#123;</span><br><span class="line">      res, err := stream.Recv()</span><br><span class="line">      <span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">          <span class="keyword">return</span> err</span><br><span class="line">      &#125;</span><br><span class="line">      v, _ := strconv.Atoi(res.Input)</span><br><span class="line">      n += v</span><br><span class="line">      stream.Send(&amp;pb.StreamResponse&#123;Output: strconv.Itoa(n)&#125;)</span><br><span class="line">	  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>客户端执行<code>streaming(c)</code>，输出如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Streaming Send: 0</span><br><span class="line">Streaming Recv: 0</span><br><span class="line">Streaming Send: 1</span><br><span class="line">Streaming Recv: 1</span><br><span class="line">Streaming Send: 2</span><br><span class="line">Streaming Recv: 3</span><br><span class="line">Streaming Send: 3</span><br><span class="line">Streaming Recv: 6</span><br><span class="line">Streaming Send: 4</span><br><span class="line">Streaming Recv: 10</span><br><span class="line">.....</span><br></pre></td></tr></table></figure>
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本篇只是写了gRPC三种流式处理的简单demo，实际情况下，根据业务背景来选择该使用哪种流。例如双向流就类似于聊天室，或保持长连接类型，而传输数量量大时，可选择单向流，让接收方批量处理。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://colobu.com/2017/04/06/dive-into-gRPC-streaming/" target="_blank" rel="noopener">gRPC那些事之Streaming</a></li>
+<li><a href="https://segmentfault.com/a/1190000016503114" target="_blank" rel="noopener">带入gRPC：gRPC Streaming</a></li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Proto"><span class="toc-number">1.</span> <span class="toc-text">Proto</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#基础代码"><span class="toc-number">2.</span> <span class="toc-text">基础代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#服务端流式响应"><span class="toc-number">3.</span> <span class="toc-text">服务端流式响应</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#客户端流式请求"><span class="toc-number">4.</span> <span class="toc-text">客户端流式请求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#双向流式"><span class="toc-number">5.</span> <span class="toc-text">双向流式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">6.</span> <span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">7.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/09/06/grpc-stream/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&text=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&is_video=false&description=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=gRPC之stream&body=Check out this article: https://www.wzmmmmj.com/2020/09/06/grpc-stream/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&title=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&name=gRPC之stream&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/09/06/grpc-stream/&t=gRPC之stream" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

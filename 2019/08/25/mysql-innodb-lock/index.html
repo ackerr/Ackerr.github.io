@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="锁是数据库系统区别与文件系统的一个关键特性。数据库系统使用锁是为了支持对共享资源进行并发访问，提供数据的完整性和一致性。但不同数据库之间或不同存储引擎之间，对于锁的实现方法各不相同，本文主要介绍MySQL InnoDB存储引擎中的锁。 锁种类根据对数据库的操作，可分为以下两种  排他锁（又称写锁，X锁） 共享锁（又称读锁，S锁）  顾名思义，读操作时，获取共享锁，共享锁之间是兼容的；而写操作时，获">
+<meta property="og:type" content="article">
+<meta property="og:title" content="InnoDB存储引擎中的锁">
+<meta property="og:url" content="https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="锁是数据库系统区别与文件系统的一个关键特性。数据库系统使用锁是为了支持对共享资源进行并发访问，提供数据的完整性和一致性。但不同数据库之间或不同存储引擎之间，对于锁的实现方法各不相同，本文主要介绍MySQL InnoDB存储引擎中的锁。 锁种类根据对数据库的操作，可分为以下两种  排他锁（又称写锁，X锁） 共享锁（又称读锁，S锁）  顾名思义，读操作时，获取共享锁，共享锁之间是兼容的；而写操作时，获">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-08-25T23:21:15.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>InnoDB存储引擎中的锁</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2019/09/14/working-with-celery-tasks-lessons-learned/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2019/08/11/django-orm%E4%B8%AD%E7%9A%84default/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&text=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&is_video=false&description=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=InnoDB存储引擎中的锁&body=Check out this article: https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&name=InnoDB存储引擎中的锁&description=&lt;p&gt;锁是数据库系统区别与文件系统的一个关键特性。数据库系统使用锁是为了支持对共享资源进行并发访问，提供数据的完整性和一致性。但不同数据库之间或不同存储引擎之间，对于锁的实现方法各不相同，本文主要介绍MySQL InnoDB存储引擎中的锁。&lt;/p&gt;
+&lt;h3 id=&#34;锁种类&#34;&gt;&lt;a href=&#34;#锁种类&#34; class=&#34;headerlink&#34; title=&#34;锁种类&#34;&gt;&lt;/a&gt;锁种类&lt;/h3&gt;&lt;p&gt;根据对数据库的操作，可分为以下两种&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;排他锁（又称写锁，X锁）&lt;/li&gt;
+&lt;li&gt;共享锁（又称读锁，S锁）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;顾名思义，读操作时，获取共享锁，共享锁之间是兼容的；而写操作时，获取排他锁，并与其他任何锁都不兼容。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;举个例子&lt;/strong&gt; ，当事务A中对数据对象a加上排他锁，则只允许事务A对对象a进行读写操作，其他事务想要对a操作只能等待事务A释放锁；而当对a加上共享锁时，则多个事务都可以同时读，但如果此时想对数据对象a进行写操作，只能等待其他共享锁释放。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&t=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#锁种类"><span class="toc-number">1.</span> <span class="toc-text">锁种类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#锁粒度"><span class="toc-number">2.</span> <span class="toc-text">锁粒度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一致性读"><span class="toc-number">3.</span> <span class="toc-text">一致性读</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#锁算法"><span class="toc-number">4.</span> <span class="toc-text">锁算法</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        InnoDB存储引擎中的锁
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-08-25T23:21:15.000Z" itemprop="datePublished">2019/08/25</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/MySQL/" rel="tag">MySQL</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>锁是数据库系统区别与文件系统的一个关键特性。数据库系统使用锁是为了支持对共享资源进行并发访问，提供数据的完整性和一致性。但不同数据库之间或不同存储引擎之间，对于锁的实现方法各不相同，本文主要介绍MySQL InnoDB存储引擎中的锁。</p>
+<h3 id="锁种类"><a href="#锁种类" class="headerlink" title="锁种类"></a>锁种类</h3><p>根据对数据库的操作，可分为以下两种</p>
+<ul>
+<li>排他锁（又称写锁，X锁）</li>
+<li>共享锁（又称读锁，S锁）</li>
+</ul>
+<p>顾名思义，读操作时，获取共享锁，共享锁之间是兼容的；而写操作时，获取排他锁，并与其他任何锁都不兼容。</p>
+<p><strong>举个例子</strong> ，当事务A中对数据对象a加上排他锁，则只允许事务A对对象a进行读写操作，其他事务想要对a操作只能等待事务A释放锁；而当对a加上共享锁时，则多个事务都可以同时读，但如果此时想对数据对象a进行写操作，只能等待其他共享锁释放。</p>
+<a id="more"></a>
+
+<h3 id="锁粒度"><a href="#锁粒度" class="headerlink" title="锁粒度"></a>锁粒度</h3><p>InnoDB中根据锁粒度，主要分为以下两种</p>
+<ul>
+<li>行级锁</li>
+<li>表级锁</li>
+</ul>
+<p>此外，InnoDB存储引擎支持多粒度锁定，允许事务中存在行级锁和表级锁。不过，当事务A对表中记录上写锁，而事务B想对表上表级锁时，事务B需要要遍历表中的所有行，看看是否有被锁定，这样效率很低。所以，为了更有效的支持多粒度锁定，InnoDB存储引擎引入了意向锁，在事务想要给表中的某几行加锁时，需要先给表上加上对应类型的锁。根据操作类型，也分为两种：</p>
+<ul>
+<li>意向排他锁（又称IX锁）</li>
+<li>意向共享锁（又称IS锁）</li>
+</ul>
+<p><strong>不过由于InnoDB存储引擎支持行级锁，因此意向锁并不会阻塞除全表扫以外的任何请求。主要是为了表示是否有请求锁定表中的某几行</strong></p>
+<h3 id="一致性读"><a href="#一致性读" class="headerlink" title="一致性读"></a>一致性读</h3><p>InnoDB中，通过多版本控制的方式来读取当前时间，数据库中的数据，称之为<strong><u>一致性非锁定读</u></strong>。在读取的行正在执行DELETE或UPDATE操作，这时执行<code>select ... from table</code>操作并不会去等待行上的X锁释放，相反地，InnoDB会去读取行的一个快照。</p>
+<blockquote>
+<p>在不同的隔离级别下，读取的方式不同，并不是每个隔离级别下都采用非锁定的一致性读，就算都是一致性非锁定读也有不同的表现。</p>
+</blockquote>
+<p>而显式的对读取操作进行加锁以保证数据逻辑的一致性，则为<strong><u>一致性锁定读</u></strong>，其中根据不同操作，加不同类型的锁。</p>
+<ul>
+<li><code>select ... for update</code>：对读取的行记录加排他锁</li>
+<li><code>select ... lock in share mode</code>：对读取的行记录加共享锁</li>
+</ul>
+<blockquote>
+<p>需要注意的是，使用一致性锁定读，前提是在一个事务中，务必加上<code>begin</code>，<code>start transaction</code> 或 <code>set autocommit=1</code></p>
+</blockquote>
+<h3 id="锁算法"><a href="#锁算法" class="headerlink" title="锁算法"></a>锁算法</h3><p>InnoDB存储引擎中有3种行级锁算法，分别是</p>
+<ul>
+<li>Record Lock： 记录锁，锁定一条记录</li>
+<li>Gap Lock：间隙锁，锁定一个范围，但不包括记录本身</li>
+<li>Next-Key Lock：Gap Lock + Record Lock，锁定一个范围并锁定记录本身</li>
+</ul>
+<p>在默认隔离级别<code>可重复读</code>下，采用了<code>Next-Key Locking</code>的机制来避免幻读。</p>
+<p>假设有这么一张users表：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">users</span>(</span><br><span class="line">    <span class="keyword">id</span> <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">    <span class="keyword">name</span> <span class="built_in">VARCHAR</span>(<span class="number">255</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">    age <span class="built_in">INT</span>,</span><br><span class="line">    job  <span class="built_in">VARCHAR</span>(<span class="number">255</span>),</span><br><span class="line">    PRIMARY <span class="keyword">KEY</span>(<span class="keyword">id</span>),</span><br><span class="line">    <span class="keyword">KEY</span>(<span class="keyword">name</span>),</span><br><span class="line">    <span class="keyword">KEY</span>(age)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>表中有这么几条记录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">+------|-------------|--------------|-------+</span><br><span class="line">|   id |      name   | job          |   age |</span><br><span class="line">|------|-------------|--------------|-------|</span><br><span class="line">|    1 | pony        | a            |    10 |</span><br><span class="line">|    2 | tony        | b            |    20 |</span><br><span class="line">|    3 | tom         | c            |    30 |</span><br><span class="line">|    4 | jeff        | d            |    40 |</span><br><span class="line">|    5 | donald      | e            |    50 |</span><br><span class="line">+------|-------------|--------------|-------+</span><br></pre></td></tr></table></figure>
+
+<p>当我们执行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">users</span> <span class="keyword">where</span> age = <span class="number">20</span> <span class="keyword">for</span> <span class="keyword">update</span>;</span><br></pre></td></tr></table></figure>
+
+<p>InnoDB会为（10，20]的记录加上Next-Key Lock，而为（20，30）记录加上Gap Lock。</p>
+<p>然而当我们执行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">users</span> <span class="keyword">where</span> <span class="keyword">id</span> = <span class="number">1</span> <span class="keyword">for</span> <span class="keyword">update</span>;</span><br></pre></td></tr></table></figure>
+
+<p>此时，InnoDB只会锁住id=1这条记录，这是因为在查询列是唯一索引的情况下，Next-Key Lock 会降级为Record Lock，从而提高并发。不过如果唯一索引是由多个列组成，而查询仅是多个列中的一个，那么查询会是range类型，最终还是会使用Next-Key Lock 进行锁定。</p>
+<blockquote>
+<p>参考：</p>
+<p>《高性能MySQL》</p>
+<p><a href="https://zhuanlan.zhihu.com/p/29150809" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/29150809</a></p>
+<p><a href="https://draveness.me/mysql-innodb.html" target="_blank" rel="noopener">https://draveness.me/mysql-innodb.html</a></p>
+</blockquote>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#锁种类"><span class="toc-number">1.</span> <span class="toc-text">锁种类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#锁粒度"><span class="toc-number">2.</span> <span class="toc-text">锁粒度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一致性读"><span class="toc-number">3.</span> <span class="toc-text">一致性读</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#锁算法"><span class="toc-number">4.</span> <span class="toc-text">锁算法</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&text=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&is_video=false&description=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=InnoDB存储引擎中的锁&body=Check out this article: https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&title=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&name=InnoDB存储引擎中的锁&description=&lt;p&gt;锁是数据库系统区别与文件系统的一个关键特性。数据库系统使用锁是为了支持对共享资源进行并发访问，提供数据的完整性和一致性。但不同数据库之间或不同存储引擎之间，对于锁的实现方法各不相同，本文主要介绍MySQL InnoDB存储引擎中的锁。&lt;/p&gt;
+&lt;h3 id=&#34;锁种类&#34;&gt;&lt;a href=&#34;#锁种类&#34; class=&#34;headerlink&#34; title=&#34;锁种类&#34;&gt;&lt;/a&gt;锁种类&lt;/h3&gt;&lt;p&gt;根据对数据库的操作，可分为以下两种&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;排他锁（又称写锁，X锁）&lt;/li&gt;
+&lt;li&gt;共享锁（又称读锁，S锁）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;顾名思义，读操作时，获取共享锁，共享锁之间是兼容的；而写操作时，获取排他锁，并与其他任何锁都不兼容。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;举个例子&lt;/strong&gt; ，当事务A中对数据对象a加上排他锁，则只允许事务A对对象a进行读写操作，其他事务想要对a操作只能等待事务A释放锁；而当对a加上共享锁时，则多个事务都可以同时读，但如果此时想对数据对象a进行写操作，只能等待其他共享锁释放。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/08/25/mysql-innodb-lock/&t=InnoDB存储引擎中的锁" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

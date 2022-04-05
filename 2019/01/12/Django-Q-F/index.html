@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="日常工作使用中，大部分的条件查询通过filter都可以完成，但是在更复杂的查询时，filter就显得无力了。 不过，好在Django为我们提供了一些可以进行复杂查询的语句，比如aggregate, annotate, Q, F models 来自Django官方文档的models，本文的查询都基于这些models  1234567891011121314151617181920212223from">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Django 中的aggregate、annotate以及Q、F查询">
+<meta property="og:url" content="https://www.wzmmmmj.com/2019/01/12/Django-Q-F/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="日常工作使用中，大部分的条件查询通过filter都可以完成，但是在更复杂的查询时，filter就显得无力了。 不过，好在Django为我们提供了一些可以进行复杂查询的语句，比如aggregate, annotate, Q, F models 来自Django官方文档的models，本文的查询都基于这些models  1234567891011121314151617181920212223from">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-01-12T20:19:06.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="Django">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>Django 中的aggregate、annotate以及Q、F查询</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2019/01/22/select-related-and-prefetch-related/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2018/12/31/2019/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&text=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&is_video=false&description=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Django 中的aggregate、annotate以及Q、F查询&body=Check out this article: https://www.wzmmmmj.com/2019/01/12/Django-Q-F/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&name=Django 中的aggregate、annotate以及Q、F查询&description=&lt;p&gt;日常工作使用中，大部分的条件查询通过&lt;code&gt;filter&lt;/code&gt;都可以完成，但是在更复杂的查询时，&lt;code&gt;filter&lt;/code&gt;就显得无力了。&lt;/p&gt;
+&lt;p&gt;不过，好在Django为我们提供了一些可以进行复杂查询的语句，比如&lt;code&gt;aggregate, annotate, Q, F&lt;/code&gt;&lt;/p&gt;
+&lt;h2 id=&#34;models&#34;&gt;&lt;a href=&#34;#models&#34; class=&#34;headerlink&#34; title=&#34;models&#34;&gt;&lt;/a&gt;models&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;来自&lt;a href=&#39;https://docs.djangoproject.com/en/2.1/topics/db/aggregation/&#39; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Django官方文档&lt;/a&gt;的&lt;code&gt;models&lt;/code&gt;，&lt;strong&gt;本文的查询都基于这些models&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;18&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;19&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;20&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;21&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;22&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;23&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; models&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Author&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;100&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    age = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Publisher&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Book&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    pages = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    price = models.DecimalField(max_digits=&lt;span class=&#34;number&#34;&gt;10&lt;/span&gt;, decimal_places=&lt;span class=&#34;number&#34;&gt;2&lt;/span&gt;)  &lt;span class=&#34;comment&#34;&gt;# 原价&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    member_price = models.DecimalField(max_digits=&lt;span class=&#34;number&#34;&gt;10&lt;/span&gt;, decimal_places=&lt;span class=&#34;number&#34;&gt;2&lt;/span&gt;)  &lt;span class=&#34;comment&#34;&gt;# 会员价&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    rating = models.FloatField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    authors = models.ManyToManyField(Author)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    publisher = models.ForeignKey(&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;        Publisher, on_delete=models.CASCADE)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    pubdate = models.DateField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Store&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    books = models.ManyToManyField(Book)&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+
+
+&lt;h2 id=&#34;aggregate（聚合查询）&#34;&gt;&lt;a href=&#34;#aggregate（聚合查询）&#34; class=&#34;headerlink&#34; title=&#34;aggregate（聚合查询）&#34;&gt;&lt;/a&gt;aggregate（聚合查询）&lt;/h2&gt;&lt;p&gt;在原生SQL语句中常常会用到一些聚合函数，用来对一组数据进行计算，比如&lt;code&gt;AVG/COUNT/MAX/MIN/SUM&lt;/code&gt; 等， &lt;code&gt;aggregate&lt;/code&gt;则是&lt;code&gt;Django&lt;/code&gt;中实现聚合函数的。以下用几个简单例子来说明。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;例：求某个出版社出售的最便宜的一本书&lt;/strong&gt;&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db.models &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; MIN&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;Book.objects.filter(publisher__name=&lt;span class=&#34;string&#34;&gt;&#39;新华出版社&#39;&lt;/span&gt;).aggregate(min_price=Min(&lt;span class=&#34;string&#34;&gt;&#39;price&#39;&lt;/span&gt;))&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;aggregate 后的结果不再为QuerySet， 而是相应的{min_price=20.00}， 如果未设置字段名，会默认为&lt;code&gt;查询字段__聚合方法&lt;/code&gt;，例如&lt;code&gt;price__min&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当然如何你想聚合其他值，比如平均价格或者最高评分，可以添加参数&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db.models &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; Avg, Max, Min&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;Book.objects.filter(publisher__name=&lt;span class=&#34;string&#34;&gt;&#39;新华出版社&#39;&lt;/span&gt;).aggregate(min_price=Min(&lt;span class=&#34;string&#34;&gt;&#39;price&#39;&lt;/span&gt;), avg_price=Avg(&lt;span class=&#34;string&#34;&gt;&#39;price&#39;&lt;/span&gt;), max_rate=Max(&lt;span class=&#34;string&#34;&gt;&#39;rating&#39;&lt;/span&gt;))&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&t=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#models"><span class="toc-number">1.</span> <span class="toc-text">models</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#aggregate（聚合查询）"><span class="toc-number">2.</span> <span class="toc-text">aggregate（聚合查询）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#annotate（分组查询）"><span class="toc-number">3.</span> <span class="toc-text">annotate（分组查询）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Q查询"><span class="toc-number">4.</span> <span class="toc-text">Q查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#F查询"><span class="toc-number">5.</span> <span class="toc-text">F查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">6.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Django 中的aggregate、annotate以及Q、F查询
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-01-12T20:19:06.000Z" itemprop="datePublished">2019/01/12</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Django/" rel="tag">Django</a>, <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>日常工作使用中，大部分的条件查询通过<code>filter</code>都可以完成，但是在更复杂的查询时，<code>filter</code>就显得无力了。</p>
+<p>不过，好在Django为我们提供了一些可以进行复杂查询的语句，比如<code>aggregate, annotate, Q, F</code></p>
+<h2 id="models"><a href="#models" class="headerlink" title="models"></a>models</h2><blockquote>
+<p>来自<a href='https://docs.djangoproject.com/en/2.1/topics/db/aggregation/' target="_blank" rel="noopener">Django官方文档</a>的<code>models</code>，<strong>本文的查询都基于这些models</strong></p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db <span class="keyword">import</span> models</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Author</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">100</span>)</span><br><span class="line">    age = models.IntegerField()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Publisher</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">300</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Book</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">300</span>)</span><br><span class="line">    pages = models.IntegerField()</span><br><span class="line">    price = models.DecimalField(max_digits=<span class="number">10</span>, decimal_places=<span class="number">2</span>)  <span class="comment"># 原价</span></span><br><span class="line">    member_price = models.DecimalField(max_digits=<span class="number">10</span>, decimal_places=<span class="number">2</span>)  <span class="comment"># 会员价</span></span><br><span class="line">    rating = models.FloatField()</span><br><span class="line">    authors = models.ManyToManyField(Author)</span><br><span class="line">    publisher = models.ForeignKey(</span><br><span class="line">        Publisher, on_delete=models.CASCADE)</span><br><span class="line">    pubdate = models.DateField()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Store</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">300</span>)</span><br><span class="line">    books = models.ManyToManyField(Book)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="aggregate（聚合查询）"><a href="#aggregate（聚合查询）" class="headerlink" title="aggregate（聚合查询）"></a>aggregate（聚合查询）</h2><p>在原生SQL语句中常常会用到一些聚合函数，用来对一组数据进行计算，比如<code>AVG/COUNT/MAX/MIN/SUM</code> 等， <code>aggregate</code>则是<code>Django</code>中实现聚合函数的。以下用几个简单例子来说明。</p>
+<p><strong>例：求某个出版社出售的最便宜的一本书</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> MIN</span><br><span class="line"></span><br><span class="line">Book.objects.filter(publisher__name=<span class="string">'新华出版社'</span>).aggregate(min_price=Min(<span class="string">'price'</span>))</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>aggregate 后的结果不再为QuerySet， 而是相应的{min_price=20.00}， 如果未设置字段名，会默认为<code>查询字段__聚合方法</code>，例如<code>price__min</code></p>
+</blockquote>
+<p>当然如何你想聚合其他值，比如平均价格或者最高评分，可以添加参数</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Avg, Max, Min</span><br><span class="line"></span><br><span class="line">Book.objects.filter(publisher__name=<span class="string">'新华出版社'</span>).aggregate(min_price=Min(<span class="string">'price'</span>), avg_price=Avg(<span class="string">'price'</span>), max_rate=Max(<span class="string">'rating'</span>))</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+
+<h2 id="annotate（分组查询）"><a href="#annotate（分组查询）" class="headerlink" title="annotate（分组查询）"></a>annotate（分组查询）</h2><p><code>annotate</code>，顾名思义就是为<code>QuerySet</code>中的每个对象生成一个独立的统计值， 统计值会存在<code>QuerySet</code>。</p>
+<p><strong>例：统计每个出版社出版的图书数量，并且以倒序排列</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Count</span><br><span class="line"></span><br><span class="line">pubs = Publisher.objects.annotate(book_num=Count(<span class="string">'book'</span>).order_by(<span class="string">'-book_num'</span>)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>通过 pubs[0].book_num 来查看结果</p>
+</blockquote>
+<p><strong>例：查询每个出版社出的书的总价格</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Sum</span><br><span class="line"></span><br><span class="line">pubs = Publisher.objects.annotate(</span><br><span class="line">    total_price=Sum(<span class="string">'book__price'</span>)).values(<span class="string">'name'</span>, <span class="string">'total_price'</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Q查询"><a href="#Q查询" class="headerlink" title="Q查询"></a>Q查询</h2><p><code>filter()</code> 等方法中的关键字参数查询 都是进行<code>AND</code>运算，如果需要执行类型<code>OR</code>语句，就需要使用<code>Q查询</code>了。</p>
+<p>当多个条件查询时，还可以通过<code>&amp;</code>， <code>|</code> 以及<code>()</code>进行分组编写Q对象，而且Q对象还可以通过使用 <code>~</code> 表达取反（NOT），当然如果查询较简单也可以使用exclude。</p>
+<p><strong>例：查询价格是小于20或大于50的图书</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Q</span><br><span class="line"></span><br><span class="line">Book.objects.filter(Q(price__lt=<span class="number">20</span>) | Q(price__gt=<span class="number">50</span>))</span><br></pre></td></tr></table></figure>
+
+<p><strong>例：查询出版社是新华出版社或者清华出版社并且不是2018年出版的书</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Q</span><br><span class="line"></span><br><span class="line">Book.objects.filter(</span><br><span class="line">(Q(publisher__name=<span class="string">'新华出版社'</span>)|Q(publisher__name=<span class="string">'清华出版社'</span>))&amp; ~Q(pubdate__year=<span class="number">2018</span>))</span><br></pre></td></tr></table></figure>
+
+<p>如果想<code>Q查询</code>与关键字参数同时使用，需要遵循一个条件，Q对象必须位于所有关键字参数前面，如下所示</p>
+<p><strong>例：查询新华出版社评分在5-9之间的图书</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> Q</span><br><span class="line"></span><br><span class="line">Book.objects.filter(Q(rating__gt=<span class="number">5</span>)|Q(rating__lt=<span class="number">9</span>), publisher__name=<span class="string">'新华出版社'</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="F查询"><a href="#F查询" class="headerlink" title="F查询"></a>F查询</h2><p>在上面的例子中，我们只是将字段值与某个常量作比较进行筛选，如果需要对字段值之间比较筛选，就需要使用Django 提供的<code>F查询</code>。</p>
+<p><strong>例：查询会员价与原价相同的图书</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> F</span><br><span class="line"></span><br><span class="line">Book.objects.filter(price=F(<span class="string">'memeber_price'</span>))</span><br></pre></td></tr></table></figure>
+
+<p>当然<code>F语句</code>还可以更改一列值，例如将选中的所有图书原价增加10块</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Book.objects.all().update(price=F(<span class="string">'price'</span>)+<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+
+<p>与<code>annotate</code>查询一起使用，<strong>求原价与会员价的差价</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db.models <span class="keyword">import</span> F</span><br><span class="line"></span><br><span class="line">Book.objects.all().annotate(spread_price=F(<span class="string">'price'</span>) - F(<span class="string">'memeber_price'</span>))</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>这4种查询已经可以应付大多数的场景，对不同的场景可以有不同的组合方式，在我看来：</p>
+<ul>
+<li><p><code>aggregate</code>用于聚合统计数据；</p>
+</li>
+<li><p><code>annotate</code>用于对数据进行分组，类似<code>group by</code>；</p>
+</li>
+<li><p><code>Q()</code>是对<code>QuerySet</code>进行更复杂的过滤筛选；</p>
+</li>
+<li><p><code>F()</code>用于对<code>Query</code>字段间的某列值进行比较或操作。</p>
+</li>
+</ul>
+<blockquote>
+<p>本文只是简单的介绍了4种查询，更多内容可查阅<a href='https://docs.djangoproject.com/en/2.1/topics/db/aggregation/' target="_blank" rel="noopener">Django官方文档</a></p>
+</blockquote>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#models"><span class="toc-number">1.</span> <span class="toc-text">models</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#aggregate（聚合查询）"><span class="toc-number">2.</span> <span class="toc-text">aggregate（聚合查询）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#annotate（分组查询）"><span class="toc-number">3.</span> <span class="toc-text">annotate（分组查询）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Q查询"><span class="toc-number">4.</span> <span class="toc-text">Q查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#F查询"><span class="toc-number">5.</span> <span class="toc-text">F查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">6.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&text=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&is_video=false&description=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Django 中的aggregate、annotate以及Q、F查询&body=Check out this article: https://www.wzmmmmj.com/2019/01/12/Django-Q-F/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&title=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&name=Django 中的aggregate、annotate以及Q、F查询&description=&lt;p&gt;日常工作使用中，大部分的条件查询通过&lt;code&gt;filter&lt;/code&gt;都可以完成，但是在更复杂的查询时，&lt;code&gt;filter&lt;/code&gt;就显得无力了。&lt;/p&gt;
+&lt;p&gt;不过，好在Django为我们提供了一些可以进行复杂查询的语句，比如&lt;code&gt;aggregate, annotate, Q, F&lt;/code&gt;&lt;/p&gt;
+&lt;h2 id=&#34;models&#34;&gt;&lt;a href=&#34;#models&#34; class=&#34;headerlink&#34; title=&#34;models&#34;&gt;&lt;/a&gt;models&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;来自&lt;a href=&#39;https://docs.djangoproject.com/en/2.1/topics/db/aggregation/&#39; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Django官方文档&lt;/a&gt;的&lt;code&gt;models&lt;/code&gt;，&lt;strong&gt;本文的查询都基于这些models&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;18&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;19&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;20&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;21&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;22&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;23&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; models&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Author&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;100&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    age = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Publisher&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Book&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    pages = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    price = models.DecimalField(max_digits=&lt;span class=&#34;number&#34;&gt;10&lt;/span&gt;, decimal_places=&lt;span class=&#34;number&#34;&gt;2&lt;/span&gt;)  &lt;span class=&#34;comment&#34;&gt;# 原价&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    member_price = models.DecimalField(max_digits=&lt;span class=&#34;number&#34;&gt;10&lt;/span&gt;, decimal_places=&lt;span class=&#34;number&#34;&gt;2&lt;/span&gt;)  &lt;span class=&#34;comment&#34;&gt;# 会员价&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    rating = models.FloatField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    authors = models.ManyToManyField(Author)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    publisher = models.ForeignKey(&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;        Publisher, on_delete=models.CASCADE)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    pubdate = models.DateField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Store&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    books = models.ManyToManyField(Book)&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+
+
+&lt;h2 id=&#34;aggregate（聚合查询）&#34;&gt;&lt;a href=&#34;#aggregate（聚合查询）&#34; class=&#34;headerlink&#34; title=&#34;aggregate（聚合查询）&#34;&gt;&lt;/a&gt;aggregate（聚合查询）&lt;/h2&gt;&lt;p&gt;在原生SQL语句中常常会用到一些聚合函数，用来对一组数据进行计算，比如&lt;code&gt;AVG/COUNT/MAX/MIN/SUM&lt;/code&gt; 等， &lt;code&gt;aggregate&lt;/code&gt;则是&lt;code&gt;Django&lt;/code&gt;中实现聚合函数的。以下用几个简单例子来说明。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;例：求某个出版社出售的最便宜的一本书&lt;/strong&gt;&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db.models &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; MIN&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;Book.objects.filter(publisher__name=&lt;span class=&#34;string&#34;&gt;&#39;新华出版社&#39;&lt;/span&gt;).aggregate(min_price=Min(&lt;span class=&#34;string&#34;&gt;&#39;price&#39;&lt;/span&gt;))&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;aggregate 后的结果不再为QuerySet， 而是相应的{min_price=20.00}， 如果未设置字段名，会默认为&lt;code&gt;查询字段__聚合方法&lt;/code&gt;，例如&lt;code&gt;price__min&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当然如何你想聚合其他值，比如平均价格或者最高评分，可以添加参数&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db.models &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; Avg, Max, Min&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;Book.objects.filter(publisher__name=&lt;span class=&#34;string&#34;&gt;&#39;新华出版社&#39;&lt;/span&gt;).aggregate(min_price=Min(&lt;span class=&#34;string&#34;&gt;&#39;price&#39;&lt;/span&gt;), avg_price=Avg(&lt;span class=&#34;string&#34;&gt;&#39;price&#39;&lt;/span&gt;), max_rate=Max(&lt;span class=&#34;string&#34;&gt;&#39;rating&#39;&lt;/span&gt;))&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/01/12/Django-Q-F/&t=Django 中的aggregate、annotate以及Q、F查询" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

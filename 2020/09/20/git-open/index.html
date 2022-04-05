@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="git-open是GitHub上开源的一个git相关命令行工具，终端通过键入git open，会在浏览器中打开当前路径所在git项目的远端页面，支持多种代码托管平台，具体可查看官方文档。本质上git-open是一个shell脚本，核心代码仅有200+行。在无参数的前提下，主要有以下几步  判断当前路径是否在git工作区内 获取当前branch的remote-url 转换remote-url为托管仓">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang实现git-open">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/09/20/git-open/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="git-open是GitHub上开源的一个git相关命令行工具，终端通过键入git open，会在浏览器中打开当前路径所在git项目的远端页面，支持多种代码托管平台，具体可查看官方文档。本质上git-open是一个shell脚本，核心代码仅有200+行。在无参数的前提下，主要有以下几步  判断当前路径是否在git工作区内 获取当前branch的remote-url 转换remote-url为托管仓">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-09-20T23:44:28.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="git">
+<meta property="article:tag" content="go">
+<meta property="article:tag" content="cli">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>Golang实现git-open</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/10/31/golang-gracefully-upgrade/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/09/06/grpc-stream/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/09/20/git-open/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/09/20/git-open/&text=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/09/20/git-open/&is_video=false&description=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Golang实现git-open&body=Check out this article: https://www.wzmmmmj.com/2020/09/20/git-open/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/09/20/git-open/&name=Golang实现git-open&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/09/20/git-open/&t=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-0"><span class="toc-number">1.</span> <span class="toc-text">Step.0</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1"><span class="toc-number">2.</span> <span class="toc-text">Step.1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2"><span class="toc-number">3.</span> <span class="toc-text">Step.2</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3"><span class="toc-number">4.</span> <span class="toc-text">Step.3</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4"><span class="toc-number">5.</span> <span class="toc-text">Step.4</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Golang实现git-open
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-09-20T23:44:28.000Z" itemprop="datePublished">2020/09/20</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/cli/" rel="tag">cli</a>, <a class="tag-link" href="/tags/git/" rel="tag">git</a>, <a class="tag-link" href="/tags/go/" rel="tag">go</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p><a href="https://github.com/paulirish/git-open" target="_blank" rel="noopener">git-open</a>是GitHub上开源的一个git相关命令行工具，终端通过键入<code>git open</code>，会在浏览器中打开当前路径所在git项目的远端页面，支持多种代码托管平台，具体可查看官方文档。本质上git-open是一个shell脚本，核心代码仅有200+行。在无参数的前提下，主要有以下几步</p>
+<ol>
+<li>判断当前路径是否在git工作区内</li>
+<li>获取当前branch的remote-url</li>
+<li>转换remote-url为托管仓库的页面地址</li>
+<li>根据不同平台，命令行唤起浏览器</li>
+</ol>
+<p>下文将依照以上步骤，通过Golang第三方库cobra来实现类似命令行功能，具体cobra用法，可移步<a href="https://github.com/spf13/cobra" target="_blank" rel="noopener">官方文档</a></p>
+<blockquote>
+<p>完整代码放置文章结尾，git open功能也已集成至<a href="https://github.com/ackerr/lab" target="_blank" rel="noopener">ackerr/lab</a>。 </p>
+</blockquote>
+<h2 id="Step-0"><a href="#Step-0" class="headerlink" title="Step.0"></a>Step.0</h2><p>首先建立好基础代码结构，并简单实现了两个工具函数</p>
+<ul>
+<li>GitCommand: 简单封装Golang中执行git命令行</li>
+<li>Err: 返回error时，输出报错信息，直接退出程序</li>
+</ul>
+<p>具体代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"github.com/spf13/cobra"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">	<span class="string">"os/exec"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> err := rootCmd.Execute(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义命令</span></span><br><span class="line"><span class="keyword">var</span> rootCmd = &amp;cobra.Command&#123;</span><br><span class="line">	Use:  <span class="string">"git-open"</span>,</span><br><span class="line">	Run: openCurrentRepo,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 核心逻辑</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">openCurrentRepo</span><span class="params">(cmd *cobra.Command, args []<span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 稍微封装一下git command</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GitCommand</span><span class="params">(args ...<span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	cmd := exec.Command(<span class="string">"git"</span>, args...)</span><br><span class="line">	output, err := cmd.Output()</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">string</span>(output), err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 快捷退出</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Err</span><span class="params">(msg ...<span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	fmt.Println(msg...)</span><br><span class="line">	os.Exit(<span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Step-1"><a href="#Step-1" class="headerlink" title="Step.1"></a>Step.1</h2><p>通过<code>git rev-parse</code>，获取当前路径与.git目录相关信息，例如以下命令</p>
+<p><strong>判断当前路径是否在git工作区内</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rev-parse --is-inside-work-tree</span><br></pre></td></tr></table></figure>
+
+<p><strong>获取.git目录路径</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rev-parse --git-dir</span><br></pre></td></tr></table></figure>
+
+<p><strong>获取git项目绝对路径</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rev-parse --show-toplevel</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>更多git rev-parse命令可查看<a href="https://git-scm.com/docs/git-rev-parse" target="_blank" rel="noopener">官方文档</a></p>
+</blockquote>
+<p>从以上命令挑选一个判断当前是否在工作区中即可，伪代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CurrentGitRepo</span><span class="params">()</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	output, err := GitCommand(<span class="string">"rev-parse"</span>, <span class="string">"-q"</span>, <span class="string">"--show-toplevel"</span>)</span><br><span class="line">	<span class="keyword">return</span> output, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Step-2"><a href="#Step-2" class="headerlink" title="Step.2"></a>Step.2</h2><p>在git中，通过HEAD指针来指向当前分支或指向某个commit，来确定当前索引位置，记录在.git/HEAD文件中，而通过<code>git symbolic-ref</code>命令，可获取当前HEAD信息</p>
+<p><strong>获取当前分支名</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git symbolic-ref --short HEAD</span><br></pre></td></tr></table></figure>
+
+<p><strong>获取当前分支remote</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config branch.&lt;branch&gt;.remote</span><br></pre></td></tr></table></figure>
+
+<p><strong>获取remote-url</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git ls-remote --get-url &lt;remote&gt;</span><br></pre></td></tr></table></figure>
+
+<p>返回的remote-url即执行<code>git remote add &lt;remote-url&gt;</code>时，添加的那串url，一般有https或ssh两种形式，格式如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># ssh  </span><br><span class="line">git@github.com:Ackerr&#x2F;lab.git</span><br><span class="line"></span><br><span class="line"># https</span><br><span class="line">https:&#x2F;&#x2F;github.com&#x2F;Ackerr&#x2F;lab.git</span><br></pre></td></tr></table></figure>
+
+<p>伪代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取当前分支，如果不存在则使用master</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CurrentBranch</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	branch, err := SymbolicRef(<span class="string">"HEAD"</span>, <span class="literal">true</span>)</span><br><span class="line">	<span class="keyword">if</span> branch == <span class="string">""</span> || err != <span class="literal">nil</span> &#123;</span><br><span class="line">		branch = <span class="string">"master"</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> branch</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 执行symbolic-ref命令</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SymbolicRef</span><span class="params">(ref <span class="keyword">string</span>, short <span class="keyword">bool</span>)</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	args := []<span class="keyword">string</span>&#123;<span class="string">"symbolic-ref"</span>&#125;</span><br><span class="line">	<span class="keyword">if</span> short &#123;</span><br><span class="line">		args = <span class="built_in">append</span>(args, <span class="string">"--short"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	args = <span class="built_in">append</span>(args, ref)</span><br><span class="line">	output, err := GitCommand(args...)</span><br><span class="line">	<span class="keyword">return</span> firstLine(output), err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过分支获取当前remote，默认为origin</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CurrentRemote</span><span class="params">(branch <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	remote, err := GitCommand(<span class="string">"config"</span>, fmt.Sprintf(<span class="string">"branch.%s.remote"</span>, branch))</span><br><span class="line">	remote = firstLine(remote)</span><br><span class="line">	<span class="keyword">if</span> remote == <span class="string">""</span> || err != <span class="literal">nil</span> &#123;</span><br><span class="line">		remote = <span class="string">"origin"</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> remote</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过remote获取remote-url，如果使用错误的remote，则报错退出</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">RemoteURL</span><span class="params">(remote <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	gitURL, err := GitCommand(<span class="string">"ls-remote"</span>, <span class="string">"--get-url"</span>, remote)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		Err(<span class="string">"git remote is not set for"</span>, remote)</span><br><span class="line">	&#125;</span><br><span class="line">	gitURL = firstLine(gitURL)</span><br><span class="line">	<span class="keyword">if</span> gitURL == remote &#123;</span><br><span class="line">		Err(remote, <span class="string">"is a wrong remote"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> gitURL</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 移除末尾换行符</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">firstLine</span><span class="params">(output <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> i := strings.Index(output, <span class="string">"\n"</span>); i &gt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> output[<span class="number">0</span>:i]</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> output</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>需要注意的一点，通过exec执行的git命令，返回值会在末尾添加换行符’\n’，所以每个命令结束都需要调用firstLine移除</p>
+</blockquote>
+<h2 id="Step-3"><a href="#Step-3" class="headerlink" title="Step.3"></a>Step.3</h2><p>正常情况下，远端仓库页面地址结构为 <code>&lt;protocol&gt;/&lt;domain&gt;/&lt;repo path&gt;</code>，一般情况下protocol为https，GitLab与GitHub类型，转换代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// for example:</span></span><br><span class="line"><span class="comment">// git@github.com/Ackerr:lab.git     -&gt; https://github.com/Ackerr/lab            </span></span><br><span class="line"><span class="comment">// https://github.com/Ackerr/lab.git -&gt; https://github.com/Ackerr/lab</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TransferToURL</span><span class="params">(gitURL <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;                                         </span><br><span class="line">    <span class="keyword">var</span> url <span class="keyword">string</span></span><br><span class="line">    <span class="keyword">if</span> strings.HasPrefix(gitURL, <span class="string">"https://"</span>) &#123;</span><br><span class="line">        url = gitURL[:<span class="built_in">len</span>(gitURL)<span class="number">-4</span>]</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> strings.HasPrefix(gitURL, <span class="string">"git@"</span>) &#123;</span><br><span class="line">        url = gitURL[:<span class="built_in">len</span>(gitURL)<span class="number">-4</span>]</span><br><span class="line">        url = strings.Replace(url, <span class="string">":"</span>, <span class="string">"/"</span>, <span class="number">1</span>)</span><br><span class="line">        url = strings.Replace(url, <span class="string">"git@"</span>, <span class="string">"https://"</span>, <span class="number">1</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> url</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Step-4"><a href="#Step-4" class="headerlink" title="Step.4"></a>Step.4</h2><p>对于不同操作系统，可能使用不同的命令唤起浏览器，例如macOS默认通过open，而windows则通过start，当然也可以通过设置环境变量$BROWSER，切换默认命令，代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">searchBrowserLauncher</span><span class="params">()</span> <span class="params">(browser <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> runtime.GOOS &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="string">"darwin"</span>:</span><br><span class="line">        browser = <span class="string">"open"</span></span><br><span class="line">    <span class="keyword">case</span> <span class="string">"windows"</span>:</span><br><span class="line">        browser = <span class="string">"cmd /c start"</span></span><br><span class="line">    <span class="keyword">case</span> <span class="string">"linux"</span>:</span><br><span class="line">        browser = <span class="string">"xdg-open"</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        browser = <span class="string">""</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> browser</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过以上几步，git open的核心伪代码大致完成，接下来微调即可，完整代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"errors"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"github.com/kballard/go-shellquote"</span></span><br><span class="line">	<span class="string">"github.com/spf13/cobra"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">	<span class="string">"os/exec"</span></span><br><span class="line">	<span class="string">"runtime"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> err := rootCmd.Execute(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		os.Exit(<span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> rootCmd = &amp;cobra.Command&#123;</span><br><span class="line">	Use:  <span class="string">"git-open"</span>,</span><br><span class="line">	Run: openCurrentRepo,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">openCurrentRepo</span><span class="params">(cmd *cobra.Command, args []<span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> remote <span class="keyword">string</span></span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(args) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		remote = args[<span class="number">0</span>]</span><br><span class="line">	&#125;</span><br><span class="line">	_, err := CurrentGitRepo()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		Err(<span class="string">"not a git repository"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> remote == <span class="string">""</span> &#123;</span><br><span class="line">		branch := CurrentBranch()</span><br><span class="line">		remote = CurrentRemote(branch)</span><br><span class="line">	&#125;</span><br><span class="line">	gitURL := RemoteURL(remote)</span><br><span class="line">	url := TransferToURL(gitURL)</span><br><span class="line">	_ = OpenBrowser(url)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GitCommand</span><span class="params">(args ...<span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	cmd := exec.Command(<span class="string">"git"</span>, args...)</span><br><span class="line">	cmd.Stderr = os.Stderr</span><br><span class="line">	output, err := cmd.Output()</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">string</span>(output), err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取当前git项目路径</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CurrentGitRepo</span><span class="params">()</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	output, err := GitCommand(<span class="string">"rev-parse"</span>, <span class="string">"-q"</span>, <span class="string">"--show-toplevel"</span>)</span><br><span class="line">	<span class="keyword">return</span> output, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取当前分支，如果不存在则使用master</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CurrentBranch</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	branch, err := SymbolicRef(<span class="string">"HEAD"</span>, <span class="literal">true</span>)</span><br><span class="line">	<span class="keyword">if</span> branch == <span class="string">""</span> || err != <span class="literal">nil</span> &#123;</span><br><span class="line">		branch = <span class="string">"master"</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> branch</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SymbolicRef</span><span class="params">(ref <span class="keyword">string</span>, short <span class="keyword">bool</span>)</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	args := []<span class="keyword">string</span>&#123;<span class="string">"symbolic-ref"</span>&#125;</span><br><span class="line">	<span class="keyword">if</span> short &#123;</span><br><span class="line">		args = <span class="built_in">append</span>(args, <span class="string">"--short"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	args = <span class="built_in">append</span>(args, ref)</span><br><span class="line">	output, err := GitCommand(args...)</span><br><span class="line">	<span class="keyword">return</span> firstLine(output), err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过分支获取当前remote，默认为origin</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CurrentRemote</span><span class="params">(branch <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	remote, err := GitCommand(<span class="string">"config"</span>, fmt.Sprintf(<span class="string">"branch.%s.remote"</span>, branch))</span><br><span class="line">	remote = firstLine(remote)</span><br><span class="line">	<span class="keyword">if</span> remote == <span class="string">""</span> || err != <span class="literal">nil</span> &#123;</span><br><span class="line">		remote = <span class="string">"origin"</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> remote</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过remote获取remote-url，如果使用错误的remote，则报错退出</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">RemoteURL</span><span class="params">(remote <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	gitURL, err := GitCommand(<span class="string">"ls-remote"</span>, <span class="string">"--get-url"</span>, remote)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		Err(<span class="string">"git remote is not set for"</span>, remote)</span><br><span class="line">	&#125;</span><br><span class="line">	gitURL = firstLine(gitURL)</span><br><span class="line">	<span class="keyword">if</span> gitURL == remote &#123;</span><br><span class="line">		Err(remote, <span class="string">"is a wrong remote"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> gitURL</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 移除末尾换行符</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">firstLine</span><span class="params">(output <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> i := strings.Index(output, <span class="string">"\n"</span>); i &gt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> output[<span class="number">0</span>:i]</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> output</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// remote url转换为web url</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TransferToURL</span><span class="params">(gitURL <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> url <span class="keyword">string</span></span><br><span class="line">	<span class="keyword">if</span> strings.HasPrefix(gitURL, <span class="string">"https://"</span>) &#123;</span><br><span class="line">		url = gitURL[:<span class="built_in">len</span>(gitURL)<span class="number">-4</span>]</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> strings.HasPrefix(gitURL, <span class="string">"git@"</span>) &#123;</span><br><span class="line">		url = gitURL[:<span class="built_in">len</span>(gitURL)<span class="number">-4</span>]</span><br><span class="line">		url = strings.Replace(url, <span class="string">":"</span>, <span class="string">"/"</span>, <span class="number">1</span>)</span><br><span class="line">		url = strings.Replace(url, <span class="string">"git@"</span>, <span class="string">"https://"</span>, <span class="number">1</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> url</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出报错，结束程序</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Err</span><span class="params">(msg ...<span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	fmt.Println(msg...)</span><br><span class="line">	os.Exit(<span class="number">1</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 唤起浏览器，打开url</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">OpenBrowser</span><span class="params">(url <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	launcher, err := browserLauncher()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	args := <span class="built_in">append</span>(launcher, url)</span><br><span class="line">	cmd := exec.Command(args[<span class="number">0</span>], args[<span class="number">1</span>:]...)</span><br><span class="line">	<span class="keyword">return</span> cmd.Run()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 切分命令为数组，方便exec.Command执行</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">browserLauncher</span><span class="params">()</span> <span class="params">([]<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	browser := os.Getenv(<span class="string">"BROWSER"</span>)</span><br><span class="line">	<span class="keyword">if</span> browser == <span class="string">""</span> &#123;</span><br><span class="line">		browser = searchBrowserLauncher()</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		browser = os.ExpandEnv(browser)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> browser == <span class="string">""</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, errors.New(<span class="string">"please set $BROWSER to a web launcher"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> shellquote.Split(browser)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 根据操作系统，返回默认browser command</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">searchBrowserLauncher</span><span class="params">()</span> <span class="params">(browser <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> runtime.GOOS &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="string">"darwin"</span>:</span><br><span class="line">		browser = <span class="string">"open"</span></span><br><span class="line">	<span class="keyword">case</span> <span class="string">"windows"</span>:</span><br><span class="line">		browser = <span class="string">"cmd /c start"</span></span><br><span class="line">	<span class="keyword">case</span> <span class="string">"linux"</span>:</span><br><span class="line">		browser = <span class="string">"xdg-open"</span></span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		browser = <span class="string">""</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> browser</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后通过<code>go build -o git-open</code>，即可通过git-open，在浏览器中打开当前项目的远端页面。</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-0"><span class="toc-number">1.</span> <span class="toc-text">Step.0</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1"><span class="toc-number">2.</span> <span class="toc-text">Step.1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2"><span class="toc-number">3.</span> <span class="toc-text">Step.2</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3"><span class="toc-number">4.</span> <span class="toc-text">Step.3</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4"><span class="toc-number">5.</span> <span class="toc-text">Step.4</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/09/20/git-open/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/09/20/git-open/&text=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/09/20/git-open/&is_video=false&description=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Golang实现git-open&body=Check out this article: https://www.wzmmmmj.com/2020/09/20/git-open/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/09/20/git-open/&title=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/09/20/git-open/&name=Golang实现git-open&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/09/20/git-open/&t=Golang实现git-open" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="select_related和  prefetch_related 是Django最常见的数据库层查询性能优化方案，合理的使用可以减少查库次数，从而提升查询性能。当然，不需要的时候也不要乱用，否则会事倍功半。虽然两者的设计目的一致，都是减少查库次数，不过两者的实现方法不同。通过几个例子，了解两个方法的使用。 Example models 本文的查询都基于这些models，最好可以新建一个Djang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Django查询优化之select_related、prefetch_related">
+<meta property="og:url" content="https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="select_related和  prefetch_related 是Django最常见的数据库层查询性能优化方案，合理的使用可以减少查库次数，从而提升查询性能。当然，不需要的时候也不要乱用，否则会事倍功半。虽然两者的设计目的一致，都是减少查库次数，不过两者的实现方法不同。通过几个例子，了解两个方法的使用。 Example models 本文的查询都基于这些models，最好可以新建一个Djang">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/use_select_related.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/no_use_select_related.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/use_prefetch_related.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/no_use_prefetch_related.png">
+<meta property="article:published_time" content="2019-01-22T21:50:03.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="Django">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/use_select_related.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>Django查询优化之select_related、prefetch_related</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2019/02/17/modify-git-commit-message/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2019/01/12/Django-Q-F/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&text=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&is_video=false&description=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Django查询优化之select_related、prefetch_related&body=Check out this article: https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&name=Django查询优化之select_related、prefetch_related&description=&lt;p&gt;&lt;code&gt;select_related&lt;/code&gt;和  &lt;code&gt;prefetch_related&lt;/code&gt; 是Django最常见的数据库层查询性能优化方案，合理的使用可以减少查库次数，从而提升查询性能。当然，不需要的时候也不要乱用，否则会事倍功半。虽然两者的设计目的一致，都是减少查库次数，不过两者的实现方法不同。通过几个例子，了解两个方法的使用。&lt;/p&gt;
+&lt;h1 id=&#34;Example-models&#34;&gt;&lt;a href=&#34;#Example-models&#34; class=&#34;headerlink&#34; title=&#34;Example models&#34;&gt;&lt;/a&gt;Example models&lt;/h1&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;本文的查询都基于这些models&lt;/strong&gt;，最好可以新建一个Django demo，进行调试&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;18&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;19&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;20&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;21&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;22&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;23&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; models&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;City&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;100&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Author&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;100&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    age = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    city = models.ForeignKey(City)  &lt;span class=&#34;comment&#34;&gt;# 城市&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Publisher&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Book&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    pages = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    price = models.DecimalField(max_digits=&lt;span class=&#34;number&#34;&gt;10&lt;/span&gt;, decimal_places=&lt;span class=&#34;number&#34;&gt;2&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    author = models.ForeignKey(Author)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Store&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    book = models.ManyToManyField(Book)&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+
+
+&lt;h1 id=&#34;Tips&#34;&gt;&lt;a href=&#34;#Tips&#34; class=&#34;headerlink&#34; title=&#34;Tips&#34;&gt;&lt;/a&gt;Tips&lt;/h1&gt;&lt;p&gt;为了能更直观的查看orm的查询次数，我们可以在&lt;code&gt;settings&lt;/code&gt;文件 中加入一段&lt;code&gt;logging&lt;/code&gt;配置，可以在console 中执行orm时，同时输出对应SQL，从而更直观的进行性能比较。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&t=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Example-models"><span class="toc-number">1.</span> <span class="toc-text">Example models</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Tips"><span class="toc-number">2.</span> <span class="toc-text">Tips</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#select-related"><span class="toc-number">3.</span> <span class="toc-text">select_related</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#fields-参数"><span class="toc-number">3.1.</span> <span class="toc-text">*fields 参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#无参数"><span class="toc-number">3.2.</span> <span class="toc-text">无参数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#prefetch-related"><span class="toc-number">4.</span> <span class="toc-text">prefetch_related</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#lookup-参数"><span class="toc-number">4.1.</span> <span class="toc-text">*lookup 参数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Django查询优化之select_related、prefetch_related
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-01-22T21:50:03.000Z" itemprop="datePublished">2019/01/22</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Django/" rel="tag">Django</a>, <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p><code>select_related</code>和  <code>prefetch_related</code> 是Django最常见的数据库层查询性能优化方案，合理的使用可以减少查库次数，从而提升查询性能。当然，不需要的时候也不要乱用，否则会事倍功半。虽然两者的设计目的一致，都是减少查库次数，不过两者的实现方法不同。通过几个例子，了解两个方法的使用。</p>
+<h1 id="Example-models"><a href="#Example-models" class="headerlink" title="Example models"></a>Example models</h1><blockquote>
+<p><strong>本文的查询都基于这些models</strong>，最好可以新建一个Django demo，进行调试</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db <span class="keyword">import</span> models</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">City</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">100</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Author</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">100</span>)</span><br><span class="line">    age = models.IntegerField()</span><br><span class="line">    city = models.ForeignKey(City)  <span class="comment"># 城市</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Publisher</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">300</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Book</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">300</span>)</span><br><span class="line">    pages = models.IntegerField()</span><br><span class="line">    price = models.DecimalField(max_digits=<span class="number">10</span>, decimal_places=<span class="number">2</span>)</span><br><span class="line">    author = models.ForeignKey(Author)</span><br><span class="line">    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Store</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    name = models.CharField(max_length=<span class="number">300</span>)</span><br><span class="line">    book = models.ManyToManyField(Book)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="Tips"><a href="#Tips" class="headerlink" title="Tips"></a>Tips</h1><p>为了能更直观的查看orm的查询次数，我们可以在<code>settings</code>文件 中加入一段<code>logging</code>配置，可以在console 中执行orm时，同时输出对应SQL，从而更直观的进行性能比较。</p>
+<a id="more"></a>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">LOGGING = &#123;</span><br><span class="line">    <span class="string">'version'</span>: <span class="number">1</span>,</span><br><span class="line">    <span class="string">'disable_existing_loggers'</span>: <span class="literal">False</span>,</span><br><span class="line">    <span class="string">'handlers'</span>: &#123;</span><br><span class="line">        <span class="string">'console'</span>: &#123;</span><br><span class="line">            <span class="string">'level'</span>: <span class="string">'DEBUG'</span>,</span><br><span class="line">            <span class="string">'class'</span>: <span class="string">'logging.StreamHandler'</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">'loggers'</span>: &#123;</span><br><span class="line">        <span class="string">'django.db.backends'</span>: &#123;</span><br><span class="line">            <span class="string">'handlers'</span>: [<span class="string">'console'</span>],</span><br><span class="line">            <span class="string">'propagate'</span>: <span class="literal">True</span>,</span><br><span class="line">            <span class="string">'level'</span>: <span class="string">'DEBUG'</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="select-related"><a href="#select-related" class="headerlink" title="select_related"></a>select_related</h1><p><code>select_realted</code> 用于<code>OneToOneFiled, ForeignKey</code>字段，相当于SQL层面的 <code>INNER JOIN</code> ，在查询时将标记的相</p>
+<p>关表关联起来，再取出需要的字段。</p>
+<h2 id="fields-参数"><a href="#fields-参数" class="headerlink" title="*fields 参数"></a>*fields 参数</h2><p><strong>例：查看所有书籍的出版社名字</strong></p>
+<p>优化：</p>
+<p><img src="/images/use_select_related.png" alt="优化"></p>
+<p>未优化：</p>
+<p><img src="/images/no_use_select_related.png" alt="未优化"></p>
+<p>对比两次查询，可发现在使用<code>select_realted</code>后 ，SQL中使用了<code>INNER JOIN</code>进行连表，从而整个循环只查库一次，反观不加优化的查询，因为需要跨表，导致查库4次，当数据量增大会加大对db层面查询压力。</p>
+<p>如果想连续连接好几个表可以如下操作，两者结果相同。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> app.models <span class="keyword">import</span> Book</span><br><span class="line"></span><br><span class="line">Book.objects.all().select_related(<span class="string">'author'</span>, <span class="string">'publisher'</span>)</span><br><span class="line"><span class="comment"># or</span></span><br><span class="line">Book.objects.all().select_related(<span class="string">'author'</span>).select_related(<span class="string">'publisher'</span>) <span class="comment"># Django1.7后</span></span><br></pre></td></tr></table></figure>
+
+<p>有时候我们会遇到更深层次的查询，可以使用<code>__</code>（双下划线），查询外键的外键表字段</p>
+<p><strong>例如: 查询所有书作者的所在城市</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> app.models <span class="keyword">import</span> Book</span><br><span class="line"></span><br><span class="line">Book.objects.all().select_related(<span class="string">'author__city'</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="无参数"><a href="#无参数" class="headerlink" title="无参数"></a>无参数</h2><p>如果未指定了参数，Django会尽可能深的去遍历所有<code>OneToOneFiled, ForeignKey</code>字段。不过不建议使用，因为这样会导致一些问题</p>
+<ul>
+<li>Django可能会将所有表关联，造成不必要的性能浪费</li>
+<li>Django本身可能会有定深度上限，会在不知道的跳出遍历，导致与结果不一致</li>
+</ul>
+<h1 id="prefetch-related"><a href="#prefetch-related" class="headerlink" title="prefetch_related"></a>prefetch_related</h1><p><code>prefetch_related</code>适用于<code>ManyToManyField, OneToManyField（也就是ForeignKey的反向查询）</code>，不同于<code>select_related</code>，<code>prefetch_related</code>的优化方案是，分别查询每个表，通过Python处理表之间的关系，而不是和<code>select_related</code>一样在SQL层通过JOIN语句进行优化。</p>
+<h2 id="lookup-参数"><a href="#lookup-参数" class="headerlink" title="*lookup 参数"></a>*lookup 参数</h2><p>用法与<code>select_related</code>基本相同，也支持链式写法。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> app.models <span class="keyword">import</span> Store</span><br><span class="line"></span><br><span class="line">Store = Store.objects.all().prefetch_related(<span class="string">'books'</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>例： 获取每个书店的所有书籍</strong></p>
+<p>优化：</p>
+<p><img src="/images/use_prefetch_related.png" alt="优化"></p>
+<p>未优化：</p>
+<p><img src="/images/no_use_prefetch_related.png" alt="未优化"></p>
+<p>通过看使用<code>prefetch_related</code>的查询SQL，可以发现在第二查询的时候，加了WHERE 条件<code>where store.id in (1,2,3)</code>，从而查库1+1次，而不是未使用优化时，每次遇到<code>store.books.all()</code>，才去查库，导致查库1+3次。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
+<li><code>select_related</code>主要针一对多和多对多关系进行优化；</li>
+<li><code>prefetch_related</code>通过分别获取各个表的内容，然后用Python处理他们之间的关系来进行优化；</li>
+<li>两者相比，能使用<code>select_related</code>时，尽量使用。</li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Example-models"><span class="toc-number">1.</span> <span class="toc-text">Example models</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Tips"><span class="toc-number">2.</span> <span class="toc-text">Tips</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#select-related"><span class="toc-number">3.</span> <span class="toc-text">select_related</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#fields-参数"><span class="toc-number">3.1.</span> <span class="toc-text">*fields 参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#无参数"><span class="toc-number">3.2.</span> <span class="toc-text">无参数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#prefetch-related"><span class="toc-number">4.</span> <span class="toc-text">prefetch_related</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#lookup-参数"><span class="toc-number">4.1.</span> <span class="toc-text">*lookup 参数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&text=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&is_video=false&description=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Django查询优化之select_related、prefetch_related&body=Check out this article: https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&title=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&name=Django查询优化之select_related、prefetch_related&description=&lt;p&gt;&lt;code&gt;select_related&lt;/code&gt;和  &lt;code&gt;prefetch_related&lt;/code&gt; 是Django最常见的数据库层查询性能优化方案，合理的使用可以减少查库次数，从而提升查询性能。当然，不需要的时候也不要乱用，否则会事倍功半。虽然两者的设计目的一致，都是减少查库次数，不过两者的实现方法不同。通过几个例子，了解两个方法的使用。&lt;/p&gt;
+&lt;h1 id=&#34;Example-models&#34;&gt;&lt;a href=&#34;#Example-models&#34; class=&#34;headerlink&#34; title=&#34;Example models&#34;&gt;&lt;/a&gt;Example models&lt;/h1&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;本文的查询都基于这些models&lt;/strong&gt;，最好可以新建一个Django demo，进行调试&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;18&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;19&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;20&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;21&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;22&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;23&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; django.db &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; models&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;City&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;100&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Author&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;100&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    age = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    city = models.ForeignKey(City)  &lt;span class=&#34;comment&#34;&gt;# 城市&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Publisher&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Book&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    pages = models.IntegerField()&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    price = models.DecimalField(max_digits=&lt;span class=&#34;number&#34;&gt;10&lt;/span&gt;, decimal_places=&lt;span class=&#34;number&#34;&gt;2&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    author = models.ForeignKey(Author)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;class&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;class&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;Store&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(models.Model)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    name = models.CharField(max_length=&lt;span class=&#34;number&#34;&gt;300&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;    book = models.ManyToManyField(Book)&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+
+
+&lt;h1 id=&#34;Tips&#34;&gt;&lt;a href=&#34;#Tips&#34; class=&#34;headerlink&#34; title=&#34;Tips&#34;&gt;&lt;/a&gt;Tips&lt;/h1&gt;&lt;p&gt;为了能更直观的查看orm的查询次数，我们可以在&lt;code&gt;settings&lt;/code&gt;文件 中加入一段&lt;code&gt;logging&lt;/code&gt;配置，可以在console 中执行orm时，同时输出对应SQL，从而更直观的进行性能比较。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/01/22/select-related-and-prefetch-related/&t=Django查询优化之select_related、prefetch_related" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

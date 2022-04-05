@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="本文主要介绍 Python time 和datetime两个最常用的内置时间库中，不同时间类型之间相互转化  Timetime库中主要分为3种时间类型  时间戳（Timestamp） 本地时间（struct_time），所处的时区时间 标准时间（struct_time），UTC时间   没错，国区时间 (本地时间) 与标准时间相差8小时  123456789101112import timepr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python 时间类型转化">
+<meta property="og:url" content="https://www.wzmmmmj.com/2018/12/22/datetime-and-time/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="本文主要介绍 Python time 和datetime两个最常用的内置时间库中，不同时间类型之间相互转化  Timetime库中主要分为3种时间类型  时间戳（Timestamp） 本地时间（struct_time），所处的时区时间 标准时间（struct_time），UTC时间   没错，国区时间 (本地时间) 与标准时间相差8小时  123456789101112import timepr">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/time.jpg">
+<meta property="article:published_time" content="2018-12-22T18:34:36.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/time.jpg">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>Python 时间类型转化</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2018/12/31/2019/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2018/11/27/shadowsocks/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&text=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&is_video=false&description=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Python 时间类型转化&body=Check out this article: https://www.wzmmmmj.com/2018/12/22/datetime-and-time/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&name=Python 时间类型转化&description=&lt;blockquote&gt;
+&lt;p&gt;本文主要介绍 Python &lt;code&gt;time&lt;/code&gt; 和&lt;code&gt;datetime&lt;/code&gt;两个最常用的内置时间库中，不同时间类型之间相互转化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;Time&#34;&gt;&lt;a href=&#34;#Time&#34; class=&#34;headerlink&#34; title=&#34;Time&#34;&gt;&lt;/a&gt;Time&lt;/h2&gt;&lt;p&gt;&lt;code&gt;time&lt;/code&gt;库中主要分为3种时间类型&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;时间戳（Timestamp）&lt;/li&gt;
+&lt;li&gt;本地时间（struct_time），所处的时区时间&lt;/li&gt;
+&lt;li&gt;标准时间（struct_time），UTC时间&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;没错，国区时间 (本地时间) 与标准时间相差8小时&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;12&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; time&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.time())  &lt;span class=&#34;comment&#34;&gt;# 时间戳  1545479527.169141&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.localtime())  &lt;span class=&#34;comment&#34;&gt;# 本地时间&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;comment&#34;&gt;# time.struct_time(tm_year=2018, tm_mon=12, tm_mday=22, tm_hour=19, tm_min=52, tm_sec=19, tm_wday=5, tm_yday=356, tm_isdst=0)&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.gmtime())  &lt;span class=&#34;comment&#34;&gt;# utc时间&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;comment&#34;&gt;# time.struct_time(tm_year=2018, tm_mon=12, tm_mday=22, tm_hour=11, tm_min=52, tm_sec=26, tm_wday=5, tm_yday=356, tm_isdst=0)&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.ctime())  &lt;span class=&#34;comment&#34;&gt;# 格式化时间&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;comment&#34;&gt;# &#39;Sat Dec 22 20:08:05 2018&#39;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&t=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Time"><span class="toc-number">1.</span> <span class="toc-text">Time</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Datetime"><span class="toc-number">2.</span> <span class="toc-text">Datetime</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Datetime-struct-time-和-timestamp"><span class="toc-number">2.1.</span> <span class="toc-text">Datetime , struct_time 和 timestamp</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Python 时间类型转化
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2018-12-22T18:34:36.000Z" itemprop="datePublished">2018/12/22</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>本文主要介绍 Python <code>time</code> 和<code>datetime</code>两个最常用的内置时间库中，不同时间类型之间相互转化</p>
+</blockquote>
+<h2 id="Time"><a href="#Time" class="headerlink" title="Time"></a>Time</h2><p><code>time</code>库中主要分为3种时间类型</p>
+<ul>
+<li>时间戳（Timestamp）</li>
+<li>本地时间（struct_time），所处的时区时间</li>
+<li>标准时间（struct_time），UTC时间</li>
+</ul>
+<blockquote>
+<p>没错，国区时间 (本地时间) 与标准时间相差8小时</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">print(time.time())  <span class="comment"># 时间戳  1545479527.169141</span></span><br><span class="line"></span><br><span class="line">print(time.localtime())  <span class="comment"># 本地时间</span></span><br><span class="line"><span class="comment"># time.struct_time(tm_year=2018, tm_mon=12, tm_mday=22, tm_hour=19, tm_min=52, tm_sec=19, tm_wday=5, tm_yday=356, tm_isdst=0)</span></span><br><span class="line"></span><br><span class="line">print(time.gmtime())  <span class="comment"># utc时间</span></span><br><span class="line"><span class="comment"># time.struct_time(tm_year=2018, tm_mon=12, tm_mday=22, tm_hour=11, tm_min=52, tm_sec=26, tm_wday=5, tm_yday=356, tm_isdst=0)</span></span><br><span class="line"></span><br><span class="line">print(time.ctime())  <span class="comment"># 格式化时间</span></span><br><span class="line"><span class="comment"># 'Sat Dec 22 20:08:05 2018'</span></span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<p>看下<code>time</code>中如何类型转化</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">timestamp = time.time()</span><br><span class="line">struct_time = time.localtime()  <span class="comment"># 或者time.gmtime()</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># timestamp -&gt; struct_time</span></span><br><span class="line">print(time.localtime(timestamp))</span><br><span class="line">print(time.gmtime(timestamp)) </span><br><span class="line"></span><br><span class="line"><span class="comment"># struct_time -&gt; timestamp</span></span><br><span class="line">print(time.mktime(struct_time))</span><br><span class="line"></span><br><span class="line"><span class="comment"># timestamp -&gt; str</span></span><br><span class="line">print(time.ctime(timestamp)) </span><br><span class="line"></span><br><span class="line"><span class="comment"># struct_time -&gt; str</span></span><br><span class="line">print(time.asctime(struct_time))</span><br><span class="line">print(time.strftime(<span class="string">"%Y-%m-%d, %H:%M:%S, %w"</span>, struct_time))  <span class="comment"># 返回自定义格式</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># str -&gt; struct_time</span></span><br><span class="line">str_time = time.strftime(<span class="string">"%Y-%m-%d, %H:%M:%S, %w"</span>, struct_time)</span><br><span class="line">struct_time = time.strptime(str_time, <span class="string">"%Y-%m-%d, %H:%M:%S, %w"</span>)  <span class="comment"># 两个参数的指示意思要对应</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p> 参考下图食用更佳</p>
+</blockquote>
+<p><img src="/images/time.jpg" alt="一张图看懂时间类型转化"></p>
+<h2 id="Datetime"><a href="#Datetime" class="headerlink" title="Datetime"></a>Datetime</h2><p><code>datetime</code>库主要包括4个类</p>
+<ul>
+<li>datetime.datetime</li>
+<li>datetime.date </li>
+<li>datetime.time</li>
+<li>datetime.timedetla</li>
+</ul>
+<blockquote>
+<p>每个类的具体差别请查看官方文档 <a href='https://docs.python.org/3/library/datetime.html' target="_blank" rel="noopener">Datetime</a></p>
+</blockquote>
+<h3 id="Datetime-struct-time-和-timestamp"><a href="#Datetime-struct-time-和-timestamp" class="headerlink" title="Datetime , struct_time 和 timestamp"></a>Datetime , struct_time 和 timestamp</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">date_time = datetime.datetime.now()  <span class="comment"># datetime 中的本地时间</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># datetime -&gt; timestamp</span></span><br><span class="line">print(date_time.timestamp())</span><br><span class="line"></span><br><span class="line"><span class="comment"># datetime -&gt; struct_time</span></span><br><span class="line">print(date_time.timetuple())</span><br><span class="line"></span><br><span class="line"><span class="comment"># timestamp -&gt; datetime</span></span><br><span class="line">print(datetime.datetime.fromtimestamp(time.time()))</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>参考链接：</p>
+<p><a href="https://zhuanlan.zhihu.com/p/23679915" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/23679915</a></p>
+<p><a href="https://www.cnblogs.com/lxmhhy/p/6030730.html" target="_blank" rel="noopener">https://www.cnblogs.com/lxmhhy/p/6030730.html</a></p>
+</blockquote>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Time"><span class="toc-number">1.</span> <span class="toc-text">Time</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Datetime"><span class="toc-number">2.</span> <span class="toc-text">Datetime</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Datetime-struct-time-和-timestamp"><span class="toc-number">2.1.</span> <span class="toc-text">Datetime , struct_time 和 timestamp</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&text=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&is_video=false&description=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Python 时间类型转化&body=Check out this article: https://www.wzmmmmj.com/2018/12/22/datetime-and-time/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&title=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&name=Python 时间类型转化&description=&lt;blockquote&gt;
+&lt;p&gt;本文主要介绍 Python &lt;code&gt;time&lt;/code&gt; 和&lt;code&gt;datetime&lt;/code&gt;两个最常用的内置时间库中，不同时间类型之间相互转化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;Time&#34;&gt;&lt;a href=&#34;#Time&#34; class=&#34;headerlink&#34; title=&#34;Time&#34;&gt;&lt;/a&gt;Time&lt;/h2&gt;&lt;p&gt;&lt;code&gt;time&lt;/code&gt;库中主要分为3种时间类型&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;时间戳（Timestamp）&lt;/li&gt;
+&lt;li&gt;本地时间（struct_time），所处的时区时间&lt;/li&gt;
+&lt;li&gt;标准时间（struct_time），UTC时间&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;没错，国区时间 (本地时间) 与标准时间相差8小时&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;12&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; time&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.time())  &lt;span class=&#34;comment&#34;&gt;# 时间戳  1545479527.169141&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.localtime())  &lt;span class=&#34;comment&#34;&gt;# 本地时间&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;comment&#34;&gt;# time.struct_time(tm_year=2018, tm_mon=12, tm_mday=22, tm_hour=19, tm_min=52, tm_sec=19, tm_wday=5, tm_yday=356, tm_isdst=0)&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.gmtime())  &lt;span class=&#34;comment&#34;&gt;# utc时间&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;comment&#34;&gt;# time.struct_time(tm_year=2018, tm_mon=12, tm_mday=22, tm_hour=11, tm_min=52, tm_sec=26, tm_wday=5, tm_yday=356, tm_isdst=0)&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;print(time.ctime())  &lt;span class=&#34;comment&#34;&gt;# 格式化时间&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;comment&#34;&gt;# &#39;Sat Dec 22 20:08:05 2018&#39;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2018/12/22/datetime-and-time/&t=Python 时间类型转化" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

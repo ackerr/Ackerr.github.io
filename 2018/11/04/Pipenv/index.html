@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="本文简单介绍下最近接触的 pipenv (Python 包管理工具之一)，随带回顾一下pip + virtualenv。  Pipenv  是 python 官网 最新推荐的包管理工具，主要功能跟使用pip + virtualenv差不多，不过官网推荐使用，肯定是有其更优秀的地方，总结一下，pipenv解决了一下几个问题：  不再需要手动创建虚拟环境 使用Pipfile 与 Pipfile.lo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pipenv - Python包管理工具">
+<meta property="og:url" content="https://www.wzmmmmj.com/2018/11/04/Pipenv/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="本文简单介绍下最近接触的 pipenv (Python 包管理工具之一)，随带回顾一下pip + virtualenv。  Pipenv  是 python 官网 最新推荐的包管理工具，主要功能跟使用pip + virtualenv差不多，不过官网推荐使用，肯定是有其更优秀的地方，总结一下，pipenv解决了一下几个问题：  不再需要手动创建虚拟环境 使用Pipfile 与 Pipfile.lo">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://picture.wzmmmmj.com/pipenv.png">
+<meta property="article:published_time" content="2018-11-04T23:07:09.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://picture.wzmmmmj.com/pipenv.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>Pipenv - Python包管理工具</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2018/11/27/shadowsocks/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2018/10/28/Flask-sqlalchemy/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2018/11/04/Pipenv/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&text=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&is_video=false&description=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Pipenv - Python包管理工具&body=Check out this article: https://www.wzmmmmj.com/2018/11/04/Pipenv/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&name=Pipenv - Python包管理工具&description=&lt;blockquote&gt;
+&lt;p&gt;本文简单介绍下最近接触的 pipenv (Python 包管理工具之一)，随带回顾一下&lt;code&gt;pip + virtualenv&lt;/code&gt;。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Pipenv  是 &lt;a href=&#39;Python.org&#39;&gt;python 官网&lt;/a&gt; 最新推荐的包管理工具，主要功能跟使用&lt;code&gt;pip + virtualenv&lt;/code&gt;差不多，不过官网推荐使用，肯定是有其更优秀的地方，总结一下，pipenv解决了一下几个问题：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;不再需要手动创建虚拟环境&lt;/li&gt;
+&lt;li&gt;使用Pipfile 与 Pipfile.lock 替代 requirements.txt 文件&lt;/li&gt;
+&lt;li&gt;使用hash校验依赖&lt;/li&gt;
+&lt;li&gt;可查看图形化依赖关系&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;安装与使用&#34;&gt;&lt;a href=&#34;#安装与使用&#34; class=&#34;headerlink&#34; title=&#34;安装与使用&#34;&gt;&lt;/a&gt;安装与使用&lt;/h2&gt;&lt;figure class=&#34;highlight bash&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;pip install --user --upgrade pipenv&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;前提是已经装好Python 与 pip&lt;/p&gt;
+&lt;/blockquote&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2018/11/04/Pipenv/&t=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#安装与使用"><span class="toc-number">1.</span> <span class="toc-text">安装与使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Pipfile"><span class="toc-number">1.0.1.</span> <span class="toc-text">Pipfile</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Pipfile-lock"><span class="toc-number">1.0.2.</span> <span class="toc-text">Pipfile.lock</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#吐槽向"><span class="toc-number">1.0.3.</span> <span class="toc-text">吐槽向</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#总结一下pipenv的基本命令"><span class="toc-number">1.0.4.</span> <span class="toc-text">总结一下pipenv的基本命令</span></a></li></ol></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Pipenv - Python包管理工具
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2018-11-04T23:07:09.000Z" itemprop="datePublished">2018/11/04</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>本文简单介绍下最近接触的 pipenv (Python 包管理工具之一)，随带回顾一下<code>pip + virtualenv</code>。</p>
+</blockquote>
+<p>Pipenv  是 <a href='Python.org'>python 官网</a> 最新推荐的包管理工具，主要功能跟使用<code>pip + virtualenv</code>差不多，不过官网推荐使用，肯定是有其更优秀的地方，总结一下，pipenv解决了一下几个问题：</p>
+<ul>
+<li>不再需要手动创建虚拟环境</li>
+<li>使用Pipfile 与 Pipfile.lock 替代 requirements.txt 文件</li>
+<li>使用hash校验依赖</li>
+<li>可查看图形化依赖关系</li>
+</ul>
+<h2 id="安装与使用"><a href="#安装与使用" class="headerlink" title="安装与使用"></a>安装与使用</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install --user --upgrade pipenv</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>前提是已经装好Python 与 pip</p>
+</blockquote>
+<a id="more"></a>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 如果安装后，无法使用pipenv命令，需要多做一步操作，将Python路径加到环境变量中</span></span><br><span class="line"></span><br><span class="line">vim ~/.profile</span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:&lt;Python路径&gt;</span><br></pre></td></tr></table></figure>
+
+<p>如果不知道python 路径可以输入一下命令查看</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m site --user-base</span><br></pre></td></tr></table></figure>
+
+<p>接下来给项目安装pipenv，执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pipenv install</span><br></pre></td></tr></table></figure>
+
+<p>执行结果如下图</p>
+<p><img src="http://picture.wzmmmmj.com/pipenv.png" alt="执行结果"></p>
+<p>观察执行过程，可发现该命令做了几步。</p>
+<ul>
+<li><p>第一步：先给项目自动创建了一个虚拟环境，等同于<code>virtualenv env</code>，不过pipenv 将所有的虚拟环境都放置在一处地方，通过<code>pipenv --venv</code>查看项目的虚拟环境位置</p>
+</li>
+<li><p>第二步：生成了两个文件<code>Pipfile and Pipfile.lock</code></p>
+</li>
+</ul>
+<h4 id="Pipfile"><a href="#Pipfile" class="headerlink" title="Pipfile"></a>Pipfile</h4><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[[source]]    # pip源，可将默认源换成其他源，如下面的豆瓣源</span><br><span class="line">url = "https://pypi.org/simple"</span><br><span class="line">verify_ssl = true</span><br><span class="line">name = "pypi"</span><br><span class="line"></span><br><span class="line">[[source]]</span><br><span class="line">url = "https://pypi.douban.com/simple"</span><br><span class="line">verify_ssl = true</span><br><span class="line">name = "douban"</span><br><span class="line"></span><br><span class="line">[packages]   # 依赖与版本</span><br><span class="line">celery = "==4.2.1"</span><br><span class="line"></span><br><span class="line">[dev-packages]</span><br><span class="line">flake8 = "&gt;=3.6.0"</span><br><span class="line"></span><br><span class="line">[requires]    # python版本</span><br><span class="line">python_version = "3.6"</span><br></pre></td></tr></table></figure>
+
+<h4 id="Pipfile-lock"><a href="#Pipfile-lock" class="headerlink" title="Pipfile.lock"></a>Pipfile.lock</h4><p>根据 <code>Pipfile</code> 和当前环境自动生成的 JSON 格式的依赖文件，<strong>任何情况下都不要手动修改该文件！</strong></p>
+<p>安装完毕后，首先<strong>激活虚拟环境</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pipenv shell  <span class="comment"># 本质上与 source env/bin/activate 相同</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">exit</span>  <span class="comment"># 退出虚拟环境,类比  deactivate</span></span><br></pre></td></tr></table></figure>
+
+<p>接下来就是使用<code>pipenv</code>来操作我们的项目依赖</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pipenv install requests</span><br></pre></td></tr></table></figure>
+
+<p>查看 Pipfile 文件内容，会发现这个文件记录了依赖，值得一提的是pipenv 可以分类依赖，观察<code>Pipfile</code>可知分为<code>packages/dev-packages</code> ，比如编码规范类型的依赖就可以放到dev-packages中，可以使用如下命令，从而分类依赖</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pipenv install ipython --dev</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>pipenv默认安装了flake8，可以执行<code>pipenv check</code>试试哦</p>
+</blockquote>
+<p>在<code>requirements.txt</code>中，个人认为最直观的问题就是会把第三方库的依赖也包括进去, 这样其实只装一样东西，可能</p>
+<p><code>pip freeze &gt;requirements.txt</code>后会出现好多依赖，而<code>Pipfile</code>并不会，如果想<strong>查看依赖关系</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pipenv graph</span><br></pre></td></tr></table></figure>
+
+<h4 id="吐槽向"><a href="#吐槽向" class="headerlink" title="吐槽向"></a>吐槽向</h4><p>使用pipenv后，一些shell 命令 如<code>python manage.py test</code> 需要变成 <code>pipenv run python manage.py test</code>，</p>
+<p>安装依赖时，会触发lock , 感觉有点久呀~，所以看了一下可以将<code>install</code>与<code>lock</code>操作分开，或者换pip源</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pipenv install xxx  --skip-lock</span><br><span class="line"></span><br><span class="line"><span class="comment"># 后续再操作</span></span><br><span class="line">pipenv lock</span><br></pre></td></tr></table></figure>
+
+<h4 id="总结一下pipenv的基本命令"><a href="#总结一下pipenv的基本命令" class="headerlink" title="总结一下pipenv的基本命令"></a>总结一下pipenv的基本命令</h4><ul>
+<li><code>pipenv --where</code>:  项目的根目录</li>
+<li><code>pipenv --venv</code>: 项目的虚拟环境路径</li>
+<li><code>pipenv install</code>:  安装<code>Pipfile</code>中的依赖，没有则生成<code>Pipfile</code></li>
+<li><code>pipenv install --dev</code>:  安装<code>Pipfile</code>中dev-pakcages的依赖</li>
+<li><code>pipenv install xx --skip-lock</code>: 安装依赖，但不进行lock</li>
+<li><code>pipenv uninstall</code>: 卸载所有依赖</li>
+<li><code>pipenv shell</code>: 进入虚拟环境</li>
+<li><code>pipenv lock</code>: 确认依赖已安装，生成相应版本的<code>Pipfile.lock</code></li>
+<li><code>pipenv check</code>: 检查代码规范</li>
+<li><code>pipenv graph</code>: 显示依赖关系</li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#安装与使用"><span class="toc-number">1.</span> <span class="toc-text">安装与使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Pipfile"><span class="toc-number">1.0.1.</span> <span class="toc-text">Pipfile</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Pipfile-lock"><span class="toc-number">1.0.2.</span> <span class="toc-text">Pipfile.lock</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#吐槽向"><span class="toc-number">1.0.3.</span> <span class="toc-text">吐槽向</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#总结一下pipenv的基本命令"><span class="toc-number">1.0.4.</span> <span class="toc-text">总结一下pipenv的基本命令</span></a></li></ol></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2018/11/04/Pipenv/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&text=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&is_video=false&description=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Pipenv - Python包管理工具&body=Check out this article: https://www.wzmmmmj.com/2018/11/04/Pipenv/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&title=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2018/11/04/Pipenv/&name=Pipenv - Python包管理工具&description=&lt;blockquote&gt;
+&lt;p&gt;本文简单介绍下最近接触的 pipenv (Python 包管理工具之一)，随带回顾一下&lt;code&gt;pip + virtualenv&lt;/code&gt;。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Pipenv  是 &lt;a href=&#39;Python.org&#39;&gt;python 官网&lt;/a&gt; 最新推荐的包管理工具，主要功能跟使用&lt;code&gt;pip + virtualenv&lt;/code&gt;差不多，不过官网推荐使用，肯定是有其更优秀的地方，总结一下，pipenv解决了一下几个问题：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;不再需要手动创建虚拟环境&lt;/li&gt;
+&lt;li&gt;使用Pipfile 与 Pipfile.lock 替代 requirements.txt 文件&lt;/li&gt;
+&lt;li&gt;使用hash校验依赖&lt;/li&gt;
+&lt;li&gt;可查看图形化依赖关系&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;安装与使用&#34;&gt;&lt;a href=&#34;#安装与使用&#34; class=&#34;headerlink&#34; title=&#34;安装与使用&#34;&gt;&lt;/a&gt;安装与使用&lt;/h2&gt;&lt;figure class=&#34;highlight bash&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;pip install --user --upgrade pipenv&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;前提是已经装好Python 与 pip&lt;/p&gt;
+&lt;/blockquote&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2018/11/04/Pipenv/&t=Pipenv - Python包管理工具" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

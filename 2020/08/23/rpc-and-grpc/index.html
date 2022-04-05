@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="前言最近我司技术栈新增加了gRPC，小弟有幸使用gRPC实现了几个业务需求，本篇文章记录对RPC以及gRPC的一些浅显认知。 RPCRPC，全称remote procedure call，即远程过程调用，也是一种客户端-服务器（client&#x2F;server）模型，通俗讲RPC就是客户端像调用本地方法一样调用了远端服务中的方法，而无需关心具体调用细节。 这里先看看本地是如何调用函数的，伪代码如下： 1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初识gRPC">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="前言最近我司技术栈新增加了gRPC，小弟有幸使用gRPC实现了几个业务需求，本篇文章记录对RPC以及gRPC的一些浅显认知。 RPCRPC，全称remote procedure call，即远程过程调用，也是一种客户端-服务器（client&#x2F;server）模型，通俗讲RPC就是客户端像调用本地方法一样调用了远端服务中的方法，而无需关心具体调用细节。 这里先看看本地是如何调用函数的，伪代码如下： 1">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://static001.geekbang.org/resource/image/82/59/826a6da653c4093f3dc3f0a833915259.jpg">
+<meta property="og:image" content="https://colobu.com/2017/04/06/dive-into-gRPC-streaming/gRPC.png">
+<meta property="article:published_time" content="2020-08-23T23:56:46.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="gRPC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static001.geekbang.org/resource/image/82/59/826a6da653c4093f3dc3f0a833915259.jpg">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>初识gRPC</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/09/06/grpc-stream/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/08/02/redis-ziplist/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&text=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&is_video=false&description=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=初识gRPC&body=Check out this article: https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&name=初识gRPC&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&t=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RPC"><span class="toc-number">2.</span> <span class="toc-text">RPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#RPC调用流程"><span class="toc-number">2.1.</span> <span class="toc-text">RPC调用流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#gRPC"><span class="toc-number">3.</span> <span class="toc-text">gRPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#gRPC-vs-REST"><span class="toc-number">3.1.</span> <span class="toc-text">gRPC vs REST</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#开发流程"><span class="toc-number">3.2.</span> <span class="toc-text">开发流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#示例代码"><span class="toc-number">3.3.</span> <span class="toc-text">示例代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">4.</span> <span class="toc-text">小结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#参考"><span class="toc-number">4.1.</span> <span class="toc-text">参考</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        初识gRPC
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-08-23T23:56:46.000Z" itemprop="datePublished">2020/08/23</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/gRPC/">gRPC</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/gRPC/" rel="tag">gRPC</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近我司技术栈新增加了gRPC，小弟有幸使用gRPC实现了几个业务需求，本篇文章记录对RPC以及gRPC的一些浅显认知。</p>
+<h2 id="RPC"><a href="#RPC" class="headerlink" title="RPC"></a>RPC</h2><p>RPC，全称<code>remote procedure call</code>，即远程过程调用，也是一种客户端-服务器（client/server）模型，通俗讲RPC就是客户端像调用本地方法一样调用了远端服务中的方法，而无需关心具体调用细节。</p>
+<p>这里先看看本地是如何调用函数的，伪代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> x + y</span><br><span class="line"></span><br><span class="line">a, b = <span class="number">5</span>, <span class="number">10</span></span><br><span class="line">result = add(a, b)</span><br></pre></td></tr></table></figure>
+
+<p>执行上述代码，大致经过以下步骤</p>
+<ol>
+<li>定义a,b变量并赋值</li>
+<li>执行add函数，将a,b值，赋值给x,y</li>
+<li>执行x+y</li>
+<li>退出add函数，将结果赋值给result</li>
+</ol>
+<p>以上4步就是本地调用的过程。在不考虑调用函数逻辑情况下，调用RPC方法体验与本地函数调用基本一致。</p>
+<p>不过因为RPC涉及网络调用，服务两端并不存在一个内存空间内，这样就会带来一些新问题</p>
+<p><strong>1.服务之间方法如何映射？</strong></p>
+<p>本地调用通过函数指针指定调用的函数，而RPC调用为了确保执行正确的函数，则需要客户端与服务端有一致函数映射，确保服务端执行的是客户端调用的，简单实现可以用过双方维护一套映射表，一般通过动态代理实现。</p>
+<p><strong>2.服务之间传输的信息结构？</strong></p>
+<p>本地调用只需将参数压入栈中，函数从栈中读取即可。而RPC调用，因为不在相同的内存空间，无法通过内存传递参数，并且需要通过网络传输，则需要一套序列化/反序列化机制，确保服务端将收到的 客户端的序列化后的参数 反序列化后 与 实际传参 意义一致。</p>
+<p><strong>3.服务之间如何通信？</strong></p>
+<p>客户端需要通过网络传输，将函数映射以及序列化后的内容发送给服务端，而服务端则需要返回内容给客户端。中间则需要选择传输协议，可以是传输层协议，也可以是应用层协议，如gRPC就使用HTTP/2。</p>
+<p>解决了上述三个问题，也就实现了一个基础的RPC框架。</p>
+<h3 id="RPC调用流程"><a href="#RPC调用流程" class="headerlink" title="RPC调用流程"></a>RPC调用流程</h3><p>下图为一个完成的RPC过程：</p>
+<p><img src="https://static001.geekbang.org/resource/image/82/59/826a6da653c4093f3dc3f0a833915259.jpg" alt="image"></p>
+<blockquote>
+<p>笼统的讲，封装好的HTTP接口形式也可算作RPC的一种</p>
+</blockquote>
+<h2 id="gRPC"><a href="#gRPC" class="headerlink" title="gRPC"></a>gRPC</h2><p>gRPC是google与2015年开源的RPC框架，相比于其他RPC框架，最显著的三大特点：</p>
+<ol>
+<li><code>ProtoBuf</code>作为默认IDL</li>
+<li>基于<code>HTTP/2</code>协议，具体HTTP/2实现可移步<a href="http://lxkaka.wang/http2/" target="_blank" rel="noopener">lxkaka</a></li>
+<li>支持多种开发语言</li>
+</ol>
+<p><img src="https://colobu.com/2017/04/06/dive-into-gRPC-streaming/gRPC.png" alt="gRPC交互流程"></p>
+<h3 id="gRPC-vs-REST"><a href="#gRPC-vs-REST" class="headerlink" title="gRPC vs REST"></a>gRPC vs REST</h3><p><strong>高性能</strong></p>
+<p>基于HTTP/2的多路复用，减少TCP连接，首部压缩等特性以及ProtoBuf高效的二进制序列化，更高效的传输消息，节省带宽，从而提高吞吐量。</p>
+<p><strong>流处理</strong></p>
+<p>HTTP/2为实时通信流提供了基础。除了简单的RPC，gRPC中支持三种流组合：</p>
+<ul>
+<li>服务器流式响应</li>
+<li>客户端流式发送</li>
+<li>双向流</li>
+</ul>
+<p><strong>开发流程简单</strong></p>
+<p>相比于RESTful接口，无需思考请求方式，URL路径等规范，定义好proto请求响应结构，生成对应pb文件即可。</p>
+<p><strong>支持多语言</strong></p>
+<p>只需编写一份proto，通过命令行生成对应语言的Stub代码即可调用，而RESTful接口，每个调用方都需要实现一套基础调用类。</p>
+<h3 id="开发流程"><a href="#开发流程" class="headerlink" title="开发流程"></a>开发流程</h3><p>体验下来，gRPC大致的开发流程如下：</p>
+<ol>
+<li>定义proto文件，即定义Request和Response结构，以及包含多个方法的服务Service</li>
+<li>通过protoc工具生成对应语言的Stub</li>
+<li>server实现proto中定义的接口，编写逻辑代码</li>
+<li>client通过生成的Stub调用server</li>
+</ol>
+<h3 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h3><p>Go编写一个获取服务器时间的rpc接口，示例代码如下：</p>
+<p><strong>time.proto</strong></p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">"proto3"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> proto;</span><br><span class="line"></span><br><span class="line"><span class="keyword">option</span> go_package = <span class="string">"base;base"</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">BaseService</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> GetTime (TimeRequest) <span class="keyword">returns</span> (TimeResponse)&#123;&#125;</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">message TimeRequest &#123;&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">message TimeResponse &#123;</span></span><br><span class="line"><span class="function">  string time = 1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过protoc生成服务端以及客户端的Stub代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">protoc --go_out&#x3D;. --go-grpc_out&#x3D;.  time.proto</span><br></pre></td></tr></table></figure>
+
+<p><strong>server.go</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"net"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line"></span><br><span class="line">	pb <span class="string">"rpc/base"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">	<span class="string">"google.golang.org/grpc/reflection"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> service <span class="keyword">struct</span> &#123;</span><br><span class="line">	pb.UnimplementedBaseServiceServer</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	listen, err := net.Listen(<span class="string">"tcp"</span>, <span class="string">":50051"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">	s := grpc.NewServer()</span><br><span class="line">	reflection.Register(s)</span><br><span class="line">	pb.RegisterBaseServiceServer(s, &amp;service&#123;&#125;)</span><br><span class="line">	s.Serve(listen)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">GetTime</span><span class="params">(ctx context.Context, in *pb.TimeRequest)</span> <span class="params">(*pb.TimeResponse, error)</span></span> &#123;</span><br><span class="line">	now := time.Now().Format(<span class="string">"2006-01-02 15:04:05"</span>)</span><br><span class="line">	<span class="keyword">return</span> &amp;pb.TimeResponse&#123;Time: now&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>client.go</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line"></span><br><span class="line">	pb <span class="string">"rpc/base"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	conn, err := grpc.Dial(<span class="string">":50051"</span>, grpc.WithInsecure(), grpc.WithBlock())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">	c := pb.NewBaseServiceClient(conn)</span><br><span class="line"></span><br><span class="line">	getTime(c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getTime</span><span class="params">(client pb.BaseServiceClient)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	ctx, cancel := context.WithTimeout(context.Background(), time.Second)</span><br><span class="line">	<span class="keyword">defer</span> cancel()</span><br><span class="line">	r, _ := client.GetTime(ctx, &amp;pb.TimeRequest&#123;&#125;)</span><br><span class="line">	fmt.Println(<span class="string">"Time:"</span>, r.Time)</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>对于简单的需求实现，gRPC很容易上手，编写protobuf并不需要额外去了解什么语法，类似interface。而如果要实现gRPC高可用，还有很多路要走。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><a href="https://grpc.io/docs/what-is-grpc/introduction/" target="_blank" rel="noopener">gRPC官方文档</a></li>
+<li><a href="https://www.zhihu.com/question/25536695" target="_blank" rel="noopener">通俗解释一下什么是RPC</a></li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RPC"><span class="toc-number">2.</span> <span class="toc-text">RPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#RPC调用流程"><span class="toc-number">2.1.</span> <span class="toc-text">RPC调用流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#gRPC"><span class="toc-number">3.</span> <span class="toc-text">gRPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#gRPC-vs-REST"><span class="toc-number">3.1.</span> <span class="toc-text">gRPC vs REST</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#开发流程"><span class="toc-number">3.2.</span> <span class="toc-text">开发流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#示例代码"><span class="toc-number">3.3.</span> <span class="toc-text">示例代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">4.</span> <span class="toc-text">小结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#参考"><span class="toc-number">4.1.</span> <span class="toc-text">参考</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&text=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&is_video=false&description=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=初识gRPC&body=Check out this article: https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&title=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&name=初识gRPC&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/08/23/rpc-and-grpc/&t=初识gRPC" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

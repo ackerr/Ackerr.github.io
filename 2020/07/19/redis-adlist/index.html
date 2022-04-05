@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Adlist，全称A generic doubly linked list，其实就是Redis中自定义的双端链表，作为一个通用数据结构，主要作用于一些Redis的功能模块，例如RedisServer中关联多个client或者RedisClient中的输出缓冲区等。具体adlist源码实现在adlist.c和adlist.h文件中。  Redis3.2版本前，列表的底层实现是由adlist和zipl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入浅出Redis之adlist">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/07/19/redis-adlist/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="Adlist，全称A generic doubly linked list，其实就是Redis中自定义的双端链表，作为一个通用数据结构，主要作用于一些Redis的功能模块，例如RedisServer中关联多个client或者RedisClient中的输出缓冲区等。具体adlist源码实现在adlist.c和adlist.h文件中。  Redis3.2版本前，列表的底层实现是由adlist和zipl">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/redis-adlist.png">
+<meta property="article:published_time" content="2020-07-19T22:32:18.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/redis-adlist.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>深入浅出Redis之adlist</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/08/02/redis-ziplist/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/07/12/redis-sds/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/07/19/redis-adlist/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&text=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&is_video=false&description=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=深入浅出Redis之adlist&body=Check out this article: https://www.wzmmmmj.com/2020/07/19/redis-adlist/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&name=深入浅出Redis之adlist&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&t=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#数据结构"><span class="toc-number">1.</span> <span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#迭代器"><span class="toc-number">2.</span> <span class="toc-text">迭代器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#adlist的一些操作"><span class="toc-number">3.</span> <span class="toc-text">adlist的一些操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#清空"><span class="toc-number">3.1.</span> <span class="toc-text">清空</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#复制"><span class="toc-number">3.2.</span> <span class="toc-text">复制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查找"><span class="toc-number">3.3.</span> <span class="toc-text">查找</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">4.</span> <span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">5.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        深入浅出Redis之adlist
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-07-19T22:32:18.000Z" itemprop="datePublished">2020/07/19</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/redis/">redis</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/redis/" rel="tag">redis</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>Adlist，全称A generic doubly linked list，其实就是Redis中自定义的双端链表，作为一个通用数据结构，主要作用于一些Redis的功能模块，例如RedisServer中关联多个client或者RedisClient中的输出缓冲区等。具体adlist源码实现在adlist.c和adlist.h文件中。</p>
+<blockquote>
+<p>Redis3.2版本前，列表的底层实现是由adlist和ziplist组成，后被quicklist取代，关于quicklist与ziplist后续会单独讲。</p>
+</blockquote>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>首先查看头文件adlist.h，对listNode的类型定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">prev</span>;</span>  <span class="comment">/* 前驱节点 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">next</span>;</span>  <span class="comment">/* 后驱节点 */</span></span><br><span class="line">    <span class="keyword">void</span> *value;  <span class="comment">/* 节点值 */</span></span><br><span class="line">&#125; listNode;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">list</span> &#123;</span></span><br><span class="line">    listNode *head;  <span class="comment">/* 链表头结点 */</span></span><br><span class="line">    listNode *tail;  <span class="comment">/* 链表尾结点 */</span></span><br><span class="line">    <span class="keyword">void</span> *(*dup)(<span class="keyword">void</span> *ptr);  <span class="comment">/* 自定义复制函数 */</span></span><br><span class="line">    <span class="keyword">void</span> (*<span class="built_in">free</span>)(<span class="keyword">void</span> *ptr);  <span class="comment">/* 自定义释放函数 */</span></span><br><span class="line">    <span class="keyword">int</span> (*match)(<span class="keyword">void</span> *ptr, <span class="keyword">void</span> *key);  <span class="comment">/* 自定义比较函数 */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> len;  <span class="comment">/* 链表长度 */</span></span><br><span class="line">&#125; <span class="built_in">list</span>;</span><br></pre></td></tr></table></figure>
+
+<p>通过前驱节点prev与后驱节点next连接多个listNode，即可实现双端链表，不过adlist中还定义了结构体list，字段含义如下：</p>
+<ul>
+<li>head/tail：分别指向链表的头尾节点，从而更方便获取头尾节点进行操作</li>
+<li>len：保存链表长度，使查询链表长度只需要O(1)时间复杂度</li>
+</ul>
+<p>对于表头节点的prev指针，以及表尾节点的next指针都会指向NULL，所以adlist还是一个无环链表。</p>
+<p>listNode中使用void *指针保存节点值，对节点值的类型不做限制，从而实现多态链表。而对于不同类型的节点值，需要类型特定函数来处理某些操作，所以list中可自定义三类函数指针，这些函数指针也是通过void *进行保存，对函数类型不做限制。</p>
+<ul>
+<li>dup：自定义复制函数，未定义时，默认的复制方式是同享数据</li>
+<li>free：自定义释放函数，对于一些复杂节点值，可能会需要额外释放内存，未定义时，只释放list本身</li>
+<li>match：自定义比较函数，例如调用listSearchKey时，会调用该函数查看结果是否为true，未定义时，比较数据的指针值</li>
+</ul>
+<p>综上，Redis中adlist的结构如下图所示：</p>
+<p><img src="/images/redis-adlist.png" alt="redis adlist"></p>
+<h2 id="迭代器"><a href="#迭代器" class="headerlink" title="迭代器"></a>迭代器</h2><p>除了双端链表的基本结构外，adlist.h中还定义了双端链表的迭代器，对于链表遍历操作，都需要通过listIter实例进行，而list则专注于保存节点值。数据结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> AL_START_HEAD 0  <span class="comment">/* 从头开始 */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> AL_START_TAIL 1  <span class="comment">/* 从尾开始 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listIter</span> &#123;</span></span><br><span class="line">    listNode *next; <span class="comment">/* 下一个节点指针 */</span></span><br><span class="line">    <span class="keyword">int</span> direction;  <span class="comment">/* 遍历方向 */</span></span><br><span class="line">&#125; listIter;</span><br></pre></td></tr></table></figure>
+
+
+<p>其中，listIter对象根据变量direction，判断遍历方向。以下是listIter对象的创建及使用</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 根据传参返回链表迭代器 */</span></span><br><span class="line"><span class="function">listIter *<span class="title">listGetIterator</span><span class="params">(<span class="built_in">list</span> *<span class="built_in">list</span>, <span class="keyword">int</span> direction)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    listIter *iter;</span><br><span class="line">    <span class="comment">/* 分配内存 */</span></span><br><span class="line">    <span class="keyword">if</span> ((iter = zmalloc(<span class="keyword">sizeof</span>(*iter))) == <span class="literal">NULL</span>) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="comment">/* 根据传参direction，判断遍历方向  */</span></span><br><span class="line">    <span class="keyword">if</span> (direction == AL_START_HEAD)</span><br><span class="line">        iter-&gt;next = <span class="built_in">list</span>-&gt;head;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        iter-&gt;next = <span class="built_in">list</span>-&gt;tail;</span><br><span class="line">    iter-&gt;direction = direction;</span><br><span class="line">    <span class="keyword">return</span> iter;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 获取下一个节点 */</span></span><br><span class="line"><span class="function">listNode *<span class="title">listNext</span><span class="params">(listIter *iter)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    listNode *current = iter-&gt;next;</span><br><span class="line">    <span class="comment">/* 判断是否到头 or 尾节点 */</span></span><br><span class="line">    <span class="keyword">if</span> (current != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="comment">/* 判断遍历方向 */</span></span><br><span class="line">        <span class="keyword">if</span> (iter-&gt;direction == AL_START_HEAD)</span><br><span class="line">            iter-&gt;next = current-&gt;next;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            iter-&gt;next = current-&gt;prev;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> current;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="adlist的一些操作"><a href="#adlist的一些操作" class="headerlink" title="adlist的一些操作"></a>adlist的一些操作</h2><p>Redis中adlist的创建，添加节点无异于其他双端链表，感兴趣可以自行查看。这里列举一些与dup/free/match函数相关的api源码，加深对这三类函数指针的理解。</p>
+<h3 id="清空"><a href="#清空" class="headerlink" title="清空"></a>清空</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 清空链表所有节点内存 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">listEmpty</span><span class="params">(<span class="built_in">list</span> *<span class="built_in">list</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> len;</span><br><span class="line">    listNode *current, *next;</span><br><span class="line"></span><br><span class="line">    current = <span class="built_in">list</span>-&gt;head;</span><br><span class="line">    len = <span class="built_in">list</span>-&gt;len;</span><br><span class="line">    <span class="comment">/* 递归释放节点值 */</span></span><br><span class="line">    <span class="keyword">while</span>(len--) &#123;</span><br><span class="line">        next = current-&gt;next;</span><br><span class="line">        <span class="comment">/* 判断free是否定义，如果定义，则传入调用free，释放节点值内存 */</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">list</span>-&gt;<span class="built_in">free</span>) <span class="built_in">list</span>-&gt;<span class="built_in">free</span>(current-&gt;value);</span><br><span class="line">        <span class="comment">/* 释放节点本身内存 */</span></span><br><span class="line">        zfree(current);</span><br><span class="line">        current = next;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* 清空链表节点 */</span></span><br><span class="line">    <span class="built_in">list</span>-&gt;head = <span class="built_in">list</span>-&gt;tail = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="built_in">list</span>-&gt;len = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 先调用listEmpty释放每个节点的内存，在调用zfree释放list本身内存 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">listRelease</span><span class="params">(<span class="built_in">list</span> *<span class="built_in">list</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    listEmpty(<span class="built_in">list</span>);</span><br><span class="line">    zfree(<span class="built_in">list</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 复制一个相同的list */</span></span><br><span class="line"><span class="function"><span class="built_in">list</span> *<span class="title">listDup</span><span class="params">(<span class="built_in">list</span> *orig)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">list</span> *copy;</span><br><span class="line">    listIter iter;</span><br><span class="line">    listNode *node;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 新建list，将dup/free/match函数赋值 */</span></span><br><span class="line">    <span class="keyword">if</span> ((copy = listCreate()) == <span class="literal">NULL</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    copy-&gt;dup = orig-&gt;dup;</span><br><span class="line">    copy-&gt;<span class="built_in">free</span> = orig-&gt;<span class="built_in">free</span>;</span><br><span class="line">    copy-&gt;match = orig-&gt;match;</span><br><span class="line">    <span class="comment">/* 初始化迭代器 */</span></span><br><span class="line">    listRewind(orig, &amp;iter);</span><br><span class="line">    <span class="comment">/* 递归迭代器，主要是复制节点值 */</span></span><br><span class="line">    <span class="keyword">while</span>((node = listNext(&amp;iter)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">void</span> *value;</span><br><span class="line">        <span class="comment">/* 判断dup函数是否定义 */</span></span><br><span class="line">        <span class="keyword">if</span> (copy-&gt;dup) &#123;</span><br><span class="line">            <span class="comment">/* 如果有，则通过dup进行赋值节点值 */</span></span><br><span class="line">            value = copy-&gt;dup(node-&gt;value);</span><br><span class="line">            <span class="keyword">if</span> (value == <span class="literal">NULL</span>) &#123;  <span class="comment">/* 如果失败则释放内存，并直接return */</span></span><br><span class="line">                listRelease(copy);</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span></span><br><span class="line">            <span class="comment">/* 未定义dup函数，则共享节点值指针 */</span></span><br><span class="line">            value = node-&gt;value;</span><br><span class="line">        <span class="comment">/* 将节点添加到链表尾部，如果失败则释放内存，并直接return */</span></span><br><span class="line">        <span class="keyword">if</span> (listAddNodeTail(copy, value) == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            listRelease(copy);</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> copy;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="查找"><a href="#查找" class="headerlink" title="查找"></a>查找</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 链表中查看是否存在与key相同的值 */</span></span><br><span class="line"><span class="function">listNode *<span class="title">listSearchKey</span><span class="params">(<span class="built_in">list</span> *<span class="built_in">list</span>, <span class="keyword">void</span> *key)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    listIter iter;</span><br><span class="line">    listNode *node;</span><br><span class="line">    <span class="comment">/* 初始化迭代器 */</span></span><br><span class="line">    listRewind(<span class="built_in">list</span>, &amp;iter);</span><br><span class="line">    <span class="comment">/* 递归迭代器，主要是比较节点值与key，如果相同则直接return */</span></span><br><span class="line">    <span class="keyword">while</span>((node = listNext(&amp;iter)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="comment">/* 判断是否定义match函数 */</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">list</span>-&gt;match) &#123;</span><br><span class="line">            <span class="comment">/* 如果有，则通过match，比较节点值与key是否"相同" */</span></span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">list</span>-&gt;match(node-&gt;value, key)) &#123;</span><br><span class="line">                <span class="keyword">return</span> node;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">/* 未定义，则直接比较节点值与key是否相同 */</span></span><br><span class="line">            <span class="keyword">if</span> (key == node-&gt;value) &#123;</span><br><span class="line">                <span class="keyword">return</span> node;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* 未找到则返回NULL */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Redis中实现的双端链表adlist，相同于基础的双端链表，具有以下几个特点：</p>
+<ol>
+<li>节点值为void *类型，可为任意类型;</li>
+<li>list结构中dup/free/match属性，也为void *类型，可以为链表设置类型特定函数，从而处理不同类型的节点值;</li>
+<li>list结构中head/tail属性，使得获取头尾节点以只需要O(1)的时间复杂度，并且可以正序/倒序访问;</li>
+<li>list结构中len属性，使得获取链表长度只需要O(1)的时间复杂度；</li>
+<li>链表表头节点的prev指针与表尾节点next都指向NULL，从而adlist为无环链表;</li>
+<li>链表的迭代操作由迭代器listIter对象完成。</li>
+</ol>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://redisbook.readthedocs.io/en/latest/internal-datastruct/adlist.html" target="_blank" rel="noopener">Redis设计与实现</a></li>
+<li><a href="http://czrzchao.com/redisSourceAdlist" target="_blank" rel="noopener">Redis源码解读之ADLIST</a></li>
+<li><a href="https://www.ibm.com/developerworks/cn/linux/l-cn-cpolym/index.html" target="_blank" rel="noopener">C语言实现多态性</a></li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#数据结构"><span class="toc-number">1.</span> <span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#迭代器"><span class="toc-number">2.</span> <span class="toc-text">迭代器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#adlist的一些操作"><span class="toc-number">3.</span> <span class="toc-text">adlist的一些操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#清空"><span class="toc-number">3.1.</span> <span class="toc-text">清空</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#复制"><span class="toc-number">3.2.</span> <span class="toc-text">复制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查找"><span class="toc-number">3.3.</span> <span class="toc-text">查找</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">4.</span> <span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">5.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/07/19/redis-adlist/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&text=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&is_video=false&description=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=深入浅出Redis之adlist&body=Check out this article: https://www.wzmmmmj.com/2020/07/19/redis-adlist/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&title=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&name=深入浅出Redis之adlist&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/07/19/redis-adlist/&t=深入浅出Redis之adlist" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

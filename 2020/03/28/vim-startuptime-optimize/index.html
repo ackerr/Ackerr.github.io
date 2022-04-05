@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="最近宅家捣鼓了一段时间Vim，原打算试试Vim作为开发IDE，随着Vim Plugin增多，基本有个IDE的雏形，开发体验上有所改善，但也导致一个问题，启动Vim时变慢了，所以又花了点时间捣鼓优化。（PS：用什么Vim当IDE，Pycharm不香吗?） startuptime在Vim7.2版本后自带了startuptime参数，可以输出Vim启动过程中的耗时 1234567--startuptim">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一次优化Vim启动速度">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="最近宅家捣鼓了一段时间Vim，原打算试试Vim作为开发IDE，随着Vim Plugin增多，基本有个IDE的雏形，开发体验上有所改善，但也导致一个问题，启动Vim时变慢了，所以又花了点时间捣鼓优化。（PS：用什么Vim当IDE，Pycharm不香吗?） startuptime在Vim7.2版本后自带了startuptime参数，可以输出Vim启动过程中的耗时 1234567--startuptim">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/startuptime.vim.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/vim-startuptime.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/lightline.vim.png">
+<meta property="article:published_time" content="2020-03-28T23:55:57.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="vim">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/startuptime.vim.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>记一次优化Vim启动速度</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/05/18/vim-register/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/01/31/windows-buffers-tabs-in-vim/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&text=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&is_video=false&description=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=记一次优化Vim启动速度&body=Check out this article: https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&name=记一次优化Vim启动速度&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&t=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#startuptime"><span class="toc-number">1.</span> <span class="toc-text">startuptime</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#startuptime-vim"><span class="toc-number">1.1.</span> <span class="toc-text">startuptime.vim</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#vim-startuptime"><span class="toc-number">1.2.</span> <span class="toc-text">vim-startuptime</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#发现问题"><span class="toc-number">1.3.</span> <span class="toc-text">发现问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#优化方案"><span class="toc-number">2.</span> <span class="toc-text">优化方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#懒加载"><span class="toc-number">2.1.</span> <span class="toc-text">懒加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#替换插件"><span class="toc-number">2.2.</span> <span class="toc-text">替换插件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Over"><span class="toc-number">3.</span> <span class="toc-text">Over</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        记一次优化Vim启动速度
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-03-28T23:55:57.000Z" itemprop="datePublished">2020/03/28</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/vim/" rel="tag">vim</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>最近宅家捣鼓了一段时间Vim，原打算试试Vim作为开发IDE，随着Vim Plugin增多，基本有个IDE的雏形，开发体验上有所改善，但也导致一个问题，启动Vim时变慢了，所以又花了点时间捣鼓优化。（PS：用什么Vim当IDE，Pycharm不香吗?）</p>
+<h2 id="startuptime"><a href="#startuptime" class="headerlink" title="startuptime"></a>startuptime</h2><p>在Vim7.2版本后自带了startuptime参数，可以输出Vim启动过程中的耗时</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">--startuptime &#123;fname&#125;                                   --startuptime</span><br><span class="line">      During startup write timing messages to the file &#123;fname&#125;.</span><br><span class="line">      This can be used to find out where time is spent while loading</span><br><span class="line">      your .vimrc, plugins and opening the first file.</span><br><span class="line">      When &#123;fname&#125; already exists new messages are appended.</span><br><span class="line">      &#123;only available when compiled with the +startuptime</span><br><span class="line">      feature&#125;</span><br></pre></td></tr></table></figure>
+<p>例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vim --startuptime time.log</span><br><span class="line">vim --startuptime time.log ~/.vimrc</span><br></pre></td></tr></table></figure>
+
+<p>这里先上一组优化前的启动耗时</p>
+<ul>
+<li>空白文件</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">221.131  000.229  000.229: sourcing &#x2F;Users&#x2F;a1&#x2F;.vim&#x2F;plugged&#x2F;vim-airline&#x2F;autoload&#x2F;airline&#x2F;extensions&#x2F;tabline&#x2F;builder.vim</span><br><span class="line">244.400  025.347: first screen update</span><br><span class="line">244.402  000.002: --- VIM STARTED ---</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>某千行python文件</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">375.848  000.497  000.497: sourcing &#x2F;Users&#x2F;a1&#x2F;.vim&#x2F;plugged&#x2F;vim-gitgutter&#x2F;autoload&#x2F;gitgutter&#x2F;hunk.vim</span><br><span class="line">378.849  085.163: first screen update</span><br><span class="line">378.863  000.014: --- VIM STARTED ---</span><br></pre></td></tr></table></figure>
+
+<p>此方法能粗略看出哪些操作启动耗时长，只能说够用。以下介绍两种更直观的启动耗时插件，便于优化。</p>
+<h3 id="startuptime-vim"><a href="#startuptime-vim" class="headerlink" title="startuptime.vim"></a>startuptime.vim</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Plug 'tweekmonster/startuptime.vim'</span><br></pre></td></tr></table></figure>
+
+<p><code>startuptime.vim</code>会对当前文件多次启动，标记启动最慢的一些插件以及输出每个步骤的耗时，安装插件后，通过使用<code>:StartupTime</code>，输出startup-log，如图：</p>
+<p><img src="/images/startuptime.vim.png" alt="startuptime.vim"></p>
+<h3 id="vim-startuptime"><a href="#vim-startuptime" class="headerlink" title="vim-startuptime"></a>vim-startuptime</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Plug 'dstein64/vim-startuptime'</span><br></pre></td></tr></table></figure>
+
+<p><code>vim-startuptime</code>会返回启动时各个操作之间耗时以及百分比，同样使用<code>:StartupTime</code>，输出如图：</p>
+<p><img src="/images/vim-startuptime.png" alt="vim-startuptime"></p>
+<h3 id="发现问题"><a href="#发现问题" class="headerlink" title="发现问题"></a>发现问题</h3><p>不难看出，拖慢startuptime的几处地方</p>
+<ol>
+<li><p>一些插件，例如nerdtree，vim-airline</p>
+</li>
+<li><p>filetype不对的插件没必要加载，例如打开python文件，显然没必要加载vim-go</p>
+</li>
+<li><p>一些多余的autocommand</p>
+</li>
+</ol>
+<h2 id="优化方案"><a href="#优化方案" class="headerlink" title="优化方案"></a>优化方案</h2><h3 id="懒加载"><a href="#懒加载" class="headerlink" title="懒加载"></a>懒加载</h3><p>本人配置在vim启动后，nerdtree是处于未展开状态，显然启动时没必要加载，在需要使用加载即可，类似的，当filetype不同时，有些插件也没必要加载。</p>
+<p>使用vim-plug的同学，一定熟悉一些plug option，像branch、do，其中有两种参数可实现lazy load。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">on	On-demand loading: Commands or &lt;Plug&gt;-mappings</span><br><span class="line">for	On-demand loading: File types</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>另一种插件管理 dein.vim 也可以实现lazy load</p>
+</blockquote>
+<p>下面改写vimrc，对于命令触发的插件添加on参数，而对于fileType触发的则添加for参数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Plug &#39;scrooloose&#x2F;nerdtree&#39;, &#123; &#39;on&#39;: &#39;NERDTreeToggle&#39; &#125;</span><br><span class="line">Plug &#39;fatih&#x2F;vim-go&#39;, &#123; &#39;do&#39;: &#39;:GoUpdateBinaries&#39;, &#39;for&#39;: &#39;go&#39; &#125;</span><br></pre></td></tr></table></figure>
+
+<p>改动后，startuptime.vim显示如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Total Time:   62.441 -- Flawless Victory</span><br><span class="line"></span><br><span class="line">Slowest 10 plugins (out of 25)~</span><br><span class="line">  vim-airline	12.314</span><br><span class="line">    [runtime]	12.211</span><br><span class="line">    [unknown]	10.636</span><br><span class="line">     coc.nvim	6.997</span><br><span class="line">     ...</span><br></pre></td></tr></table></figure>
+
+<p>执行<code>vim --startuptime time.log a.py</code></p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">323.386</span>  <span class="number">051.707</span>: <span class="keyword">first</span> screen <span class="keyword">update</span></span><br><span class="line"><span class="number">323.399</span>  <span class="number">000.013</span>: --- VIM STARTED ---</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>nerdtree通过系统调用获取文件树，类似的还有statusline中获取分支名，这类系统调用的方式都是拖慢启动速度</p>
+</blockquote>
+<h3 id="替换插件"><a href="#替换插件" class="headerlink" title="替换插件"></a>替换插件</h3><p>众所周知，vim-airline是statusline界的集大成者，兼容了许多常用插件，但同时也导致加载vim-airline时，加载不必要的内容，虽然<a href="https://github.com/vim-airline/vim-airline#performance" target="_blank" rel="noopener">vim-airline performance</a> 讲解了如何优化，不过我选择用更轻量的lightline.vim替换vim-airline。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">" Plug 'vim-airline/vim-airline'</span><br><span class="line">" Plug 'vim-airline/vim-airline-themes'</span><br><span class="line">Plug 'itchyny/lightline.vim'</span><br><span class="line">Plug 'mengelbrecht/lightline-bufferline'</span><br></pre></td></tr></table></figure>
+
+<p>如图为使用lightline.vim的statusline，以及配置对比</p>
+<p><img src="/images/lightline.vim.png" alt="lightline.vim"></p>
+<p>再次使用<code>startuptime.vim</code> 以及<code>vim --startuptime time.log a.py</code>，输出如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Total Time:   55.207 -- Flawless Victory</span><br><span class="line"></span><br><span class="line">Slowest 10 plugins (out of 26)~</span><br><span class="line">    [runtime]	12.493</span><br><span class="line">    [unknown]	11.405</span><br><span class="line">     coc.nvim	7.082</span><br><span class="line">      darcula	4.432</span><br><span class="line">          ale	3.546</span><br><span class="line">vim-gitgutter	3.060</span><br><span class="line">lightline.vim	2.748</span><br><span class="line">     ...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">204.982  025.837: first screen update</span><br><span class="line">204.984  000.002: --- VIM STARTED ---</span><br></pre></td></tr></table></figure>
+
+<p>启动新文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">121.816  015.576: first screen update</span><br><span class="line">121.818  000.002: --- VIM STARTED ---</span><br></pre></td></tr></table></figure>
+
+<h2 id="Over"><a href="#Over" class="headerlink" title="Over"></a>Over</h2><p>至此，经过几个步骤之后，启动时间减少了越一半，200ms也还过得去，毕竟不是每次都打开千行的文件。另外对于现如今还不支持异步或者更新不积极的插件，如果有合适的替代品也可以替换，例如fzf.vim或Leaderf替换CtrlP，vista替换tagbar。定期更新vimrc，删除不需要的配置以及插件，有可能会有意外的惊喜哦。</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#startuptime"><span class="toc-number">1.</span> <span class="toc-text">startuptime</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#startuptime-vim"><span class="toc-number">1.1.</span> <span class="toc-text">startuptime.vim</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#vim-startuptime"><span class="toc-number">1.2.</span> <span class="toc-text">vim-startuptime</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#发现问题"><span class="toc-number">1.3.</span> <span class="toc-text">发现问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#优化方案"><span class="toc-number">2.</span> <span class="toc-text">优化方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#懒加载"><span class="toc-number">2.1.</span> <span class="toc-text">懒加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#替换插件"><span class="toc-number">2.2.</span> <span class="toc-text">替换插件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Over"><span class="toc-number">3.</span> <span class="toc-text">Over</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&text=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&is_video=false&description=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=记一次优化Vim启动速度&body=Check out this article: https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&title=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&name=记一次优化Vim启动速度&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/03/28/vim-startuptime-optimize/&t=记一次优化Vim启动速度" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

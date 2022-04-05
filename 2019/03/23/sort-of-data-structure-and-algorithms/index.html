@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="分析排序算法的几个要点：  排序算法的执行效率，比如最好、最好、平均时间复杂度，移动次数等  排序算法的内存消耗，也就是它们的空间复杂度  排序算法的稳定性，如果待排序的序列中存在值相等的元素，经过排序之后，相等元素原有的先后顺序不变则稳定     附一张排序图，其中 n&#x3D;数据量     k&#x3D;桶的个数     In-place&#x3D;没有占用额外内存，out-place&#x3D;占用额外内存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据结构与算法之排序">
+<meta property="og:url" content="https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="分析排序算法的几个要点：  排序算法的执行效率，比如最好、最好、平均时间复杂度，移动次数等  排序算法的内存消耗，也就是它们的空间复杂度  排序算法的稳定性，如果待排序的序列中存在值相等的元素，经过排序之后，相等元素原有的先后顺序不变则稳定     附一张排序图，其中 n&#x3D;数据量     k&#x3D;桶的个数     In-place&#x3D;没有占用额外内存，out-place&#x3D;占用额外内存">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/sort.png">
+<meta property="article:published_time" content="2019-03-23T16:57:20.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="排序">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/sort.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>数据结构与算法之排序</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2019/03/30/binary-search-of-data-structure-and-algorithms/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2019/03/03/single-linked-list-of-data-structure/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&text=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&is_video=false&description=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=数据结构与算法之排序&body=Check out this article: https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&name=数据结构与算法之排序&description=&lt;p&gt;分析排序算法的几个要点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;排序算法的执行效率，比如最好、最好、平均时间复杂度，移动次数等&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;排序算法的内存消耗，也就是它们的空间复杂度&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;排序算法的稳定性，如果待排序的序列中存在值相等的元素，经过排序之后，相等元素原有的先后顺序不变则稳定&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;/images/sort.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;附一张排序图，其中 n=数据量     k=桶的个数     In-place=没有占用额外内存，out-place=占用额外内存&lt;/p&gt;
+&lt;/blockquote&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&t=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#冒泡排序"><span class="toc-number">1.</span> <span class="toc-text">冒泡排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#选择排序"><span class="toc-number">2.</span> <span class="toc-text">选择排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#插入排序"><span class="toc-number">3.</span> <span class="toc-text">插入排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#希尔排序"><span class="toc-number">4.</span> <span class="toc-text">希尔排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#快速排序"><span class="toc-number">5.</span> <span class="toc-text">快速排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#归并排序"><span class="toc-number">6.</span> <span class="toc-text">归并排序</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number"></span> <span class="toc-text">总结</span></a>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        数据结构与算法之排序
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-03-23T16:57:20.000Z" itemprop="datePublished">2019/03/23</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/">数据结构与算法</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/%E6%8E%92%E5%BA%8F/" rel="tag">排序</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>分析排序算法的几个要点：</p>
+<ol>
+<li><p>排序算法的执行效率，比如最好、最好、平均时间复杂度，移动次数等</p>
+</li>
+<li><p>排序算法的内存消耗，也就是它们的空间复杂度</p>
+</li>
+<li><p>排序算法的稳定性，如果待排序的序列中存在值相等的元素，经过排序之后，相等元素原有的先后顺序不变则稳定</p>
+</li>
+</ol>
+<p><img src="/images/sort.png" alt=""></p>
+<blockquote>
+<p>附一张排序图，其中 n=数据量     k=桶的个数     In-place=没有占用额外内存，out-place=占用额外内存</p>
+</blockquote>
+<a id="more"></a>
+
+<h3 id="冒泡排序"><a href="#冒泡排序" class="headerlink" title="冒泡排序"></a>冒泡排序</h3><p>冒泡排序是最简单的排序算法之一，也是面试中经常遇到的题。其大题思想通过相邻两位比较和交换，将小（大）的数交换到最前面（后面），类似气泡上升一样。</p>
+<ol>
+<li>通过比较相邻元素，保证右侧元素大于左侧，使每次遍历的最大值在序列的最后项；</li>
+<li>对剩下的n-1项重复执行步骤1。</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bubble_sort</span><span class="params">(nums)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> len(nums) &lt;= <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">return</span> nums</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, len(nums)):</span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> range(len(nums) - i):</span><br><span class="line">            <span class="keyword">if</span> nums[j] &gt; nums[j + <span class="number">1</span>]:</span><br><span class="line">                nums[j], nums[j + <span class="number">1</span>] = nums[j + <span class="number">1</span>], nums[j]</span><br><span class="line">    <span class="keyword">return</span> nums</span><br></pre></td></tr></table></figure>
+
+<h3 id="选择排序"><a href="#选择排序" class="headerlink" title="选择排序"></a>选择排序</h3><p>选择排序，顾名思义，就是每次遍历选择序列中最小值，放置在此次遍历的首位。与冒泡排序不同的是，选择排序是通过对整体的比较。因为每次遍历都会遍历全部元素，所以选择排序的最好，最坏时间复杂度都是 O(n^2^)</p>
+<ol>
+<li>将序列首位元素设置为标志位；</li>
+<li>遍历序列，与标志位比较，选出最小值，与首位元素交换；</li>
+<li>对剩下的项重复执行1，2步骤。</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">select_sort</span><span class="params">(nums)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(len(nums)):</span><br><span class="line">        min_index = i</span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> range(i, len(nums)):</span><br><span class="line">            <span class="keyword">if</span> nums[min_index] &gt; nums[j]:</span><br><span class="line">                min_index = j</span><br><span class="line">        nums[i], nums[min_index] = nums[min_index], nums[i]</span><br><span class="line">    <span class="keyword">return</span> nums</span><br></pre></td></tr></table></figure>
+
+<h3 id="插入排序"><a href="#插入排序" class="headerlink" title="插入排序"></a>插入排序</h3><p>插入排序是O(n^2^)的3种排序中最为稳定的排序方法，排序思想类似于选择排序，不过插入排序 是将每次的值，与前值比较，直到比某个值n小，插入到n后，其余元素后移一位。与选择排序相比，插入排序可以减少交换次数。</p>
+<blockquote>
+<p>类似打扑克时，理牌的过程</p>
+</blockquote>
+<p>元素m与前值n比较，</p>
+<ol>
+<li>如果m&gt;n，则进行下次循环</li>
+<li>如果m&lt;n，交换位置，进行下一次比较</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">insert_sort</span><span class="params">(cls, nums)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, len(nums)):</span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> range(i, <span class="number">0</span>, <span class="number">-1</span>):</span><br><span class="line">            <span class="keyword">if</span> nums[j] &lt; nums[j - <span class="number">1</span>]:</span><br><span class="line">                nums[j - <span class="number">1</span>], nums[j] = nums[j], nums[j - <span class="number">1</span>]</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">return</span> nums</span><br></pre></td></tr></table></figure>
+
+<h3 id="希尔排序"><a href="#希尔排序" class="headerlink" title="希尔排序"></a>希尔排序</h3><p>希尔排序是插入排序的一个变种，可以更高效的完成排序。希尔排序的关键在于间隔序列的设定，以确定增量。</p>
+<ol>
+<li>选择间隔，确定增量（固定间隔或动态定义间隔）；</li>
+<li>根据间隔，对序列进行分组，对每组元素进行插入排序；</li>
+<li>对新序列重复执行1，2步骤，直到完成排序。</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">shell_sort</span><span class="params">(nums)</span>:</span></span><br><span class="line">    length, gap = len(nums), <span class="number">1</span></span><br><span class="line">    <span class="keyword">while</span> gap &lt; length:  <span class="comment"># 动态生成间隔值</span></span><br><span class="line">        gap = gap * <span class="number">3</span> + <span class="number">1</span></span><br><span class="line">    <span class="keyword">while</span> gap &gt; <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> range(gap, length:  <span class="comment"># 执行</span></span><br><span class="line">            <span class="keyword">for</span> j <span class="keyword">in</span> range(i, <span class="number">0</span>, -gap):</span><br><span class="line">                <span class="keyword">if</span> nums[j] &lt; nums[j - gap]:</span><br><span class="line">                    nums[j - gap], nums[j] = nums[j], nums[j - gap]</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">break</span></span><br><span class="line">        gap //= <span class="number">3</span></span><br><span class="line">   <span class="keyword">return</span> nums</span><br></pre></td></tr></table></figure>
+
+<h3 id="快速排序"><a href="#快速排序" class="headerlink" title="快速排序"></a>快速排序</h3><p>快速排序，俗称快排，最实用的排序方法，手写快排应该是出场率最高的面试题之一了。</p>
+<ol>
+<li>找到一个基准值</li>
+<li>根据与基准值比较大小，将序列分为左右两个两个子序列</li>
+<li>对子序列重复1，2步骤，直到子序列只有一个元素</li>
+</ol>
+<p><strong>快速排序的好坏，关键在于基准值</strong></p>
+<blockquote>
+<p>基准值的选择可以使用三数取中法即（每次排序随机取三个数的中间值作为分区点）或随机法（随机取值）。</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_qsort</span><span class="params">(nums, start, end)</span>:</span></span><br><span class="line">    base, left, right = nums[start], start, end</span><br><span class="line">    <span class="keyword">while</span> left &lt; right:</span><br><span class="line">        <span class="keyword">while</span> left &lt; right <span class="keyword">and</span> nums[right] &gt;= base:</span><br><span class="line">            right -= <span class="number">1</span></span><br><span class="line">        <span class="keyword">if</span> left != right:</span><br><span class="line">            nums[left], nums[right] = nums[right], nums[left]</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">while</span> left &lt; right <span class="keyword">and</span> nums[left] &lt;= base:</span><br><span class="line">            left += <span class="number">1</span></span><br><span class="line">        <span class="keyword">if</span> left != right:</span><br><span class="line">            nums[left], nums[right] = nums[right], nums[left]</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">if</span> left - <span class="number">1</span> &gt; start:</span><br><span class="line">        _qsort(nums, start, left <span class="number">-1</span>)</span><br><span class="line">    <span class="keyword">if</span> right + <span class="number">1</span> &lt; end:</span><br><span class="line">        _qsort(nums, right + <span class="number">1</span>, end)</span><br><span class="line">    <span class="keyword">return</span> nums</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">quick_sort</span><span class="params">(nums)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> len(nums) &lt;= <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">return</span> nums</span><br><span class="line">    <span class="keyword">return</span> _qsort(nums, <span class="number">0</span>, len(nums))</span><br></pre></td></tr></table></figure>
+
+<h3 id="归并排序"><a href="#归并排序" class="headerlink" title="归并排序"></a>归并排序</h3><p>归并排序比快速排序更加稳定，不受数据影响，不过需要空间复杂度<strong>O(n)</strong>作为代价。</p>
+<ol>
+<li>将序列分为两个子序列</li>
+<li>重复1步骤，直到每个序列至多两个元素</li>
+<li>递归序列内排序，直到排序完成</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_merge</span><span class="params">(left, right)</span>:</span></span><br><span class="line">    a, b, ans = <span class="number">0</span>, <span class="number">0</span>, []</span><br><span class="line">    <span class="keyword">while</span> a &lt; len(left) <span class="keyword">and</span> b &lt; len(right):</span><br><span class="line">        <span class="keyword">if</span> left[a] &lt; right[b]:</span><br><span class="line">            ans.append(left[a])</span><br><span class="line">            a += <span class="number">1</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            ans.append(right[b])</span><br><span class="line">            b += <span class="number">1</span></span><br><span class="line">    ans += left[a:] <span class="keyword">or</span> right[b:]</span><br><span class="line">    <span class="keyword">return</span> ans</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">merge_sort</span><span class="params">(nums)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> len(nums) &lt;= <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">return</span> nums</span><br><span class="line">    left = merge_sort(nums[:len(nums) // <span class="number">2</span>])</span><br><span class="line">    right = merge_sort(nums[len(nums) // <span class="number">2</span>:])</span><br><span class="line">    <span class="keyword">return</span> _merge(left, right)</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li><p>不能一味的根据时间复杂度，来选择某种排序方法，而是要根据实际情况。例如当序列元素个数少时，插入排序的效率就要大于快排。如果数据量过大，内存不充分的情况下，也不宜使用需要额外空间的归并排序。</p>
+</li>
+<li><p>不同语言在实现sort函数时，使用的排序方法不同。不过都有根据元素的个数来改变使用的排序方法</p>
+</li>
+</ol>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#冒泡排序"><span class="toc-number">1.</span> <span class="toc-text">冒泡排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#选择排序"><span class="toc-number">2.</span> <span class="toc-text">选择排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#插入排序"><span class="toc-number">3.</span> <span class="toc-text">插入排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#希尔排序"><span class="toc-number">4.</span> <span class="toc-text">希尔排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#快速排序"><span class="toc-number">5.</span> <span class="toc-text">快速排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#归并排序"><span class="toc-number">6.</span> <span class="toc-text">归并排序</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number"></span> <span class="toc-text">总结</span></a>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&text=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&is_video=false&description=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=数据结构与算法之排序&body=Check out this article: https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&title=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&name=数据结构与算法之排序&description=&lt;p&gt;分析排序算法的几个要点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;排序算法的执行效率，比如最好、最好、平均时间复杂度，移动次数等&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;排序算法的内存消耗，也就是它们的空间复杂度&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;排序算法的稳定性，如果待排序的序列中存在值相等的元素，经过排序之后，相等元素原有的先后顺序不变则稳定&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;/images/sort.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;附一张排序图，其中 n=数据量     k=桶的个数     In-place=没有占用额外内存，out-place=占用额外内存&lt;/p&gt;
+&lt;/blockquote&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/03/23/sort-of-data-structure-and-algorithms/&t=数据结构与算法之排序" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="在Web服务中，除了实际的业务代码，经常还需要实现统一记录请求日志，权限管理或异常处理等功能，这些在web框架Gin或Django中可通过middleware实现，而gRPC中则可使用interceptor，对rpc请求或响应进行拦截处理。 gRPC服务端跟客户端均可实现各自的拦截器，根据rpc的两种请求方式可分为两种。  Unary Interceptor（一元拦截器） Stream Inter">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gRPC之interceptor">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="在Web服务中，除了实际的业务代码，经常还需要实现统一记录请求日志，权限管理或异常处理等功能，这些在web框架Gin或Django中可通过middleware实现，而gRPC中则可使用interceptor，对rpc请求或响应进行拦截处理。 gRPC服务端跟客户端均可实现各自的拦截器，根据rpc的两种请求方式可分为两种。  Unary Interceptor（一元拦截器） Stream Inter">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/grpc-interceptor.png">
+<meta property="article:published_time" content="2020-11-08T21:13:25.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="gRPC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/grpc-interceptor.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>gRPC之interceptor</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/11/22/diy-computer-setup/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/10/31/golang-gracefully-upgrade/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&text=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&is_video=false&description=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=gRPC之interceptor&body=Check out this article: https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&name=gRPC之interceptor&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&t=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一元拦截器"><span class="toc-number">1.</span> <span class="toc-text">一元拦截器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#流式拦截器"><span class="toc-number">2.</span> <span class="toc-text">流式拦截器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#举个例子"><span class="toc-number">3.</span> <span class="toc-text">举个例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">4.</span> <span class="toc-text">小结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        gRPC之interceptor
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-11-08T21:13:25.000Z" itemprop="datePublished">2020/11/08</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/gRPC/">gRPC</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/gRPC/" rel="tag">gRPC</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>在Web服务中，除了实际的业务代码，经常还需要实现统一记录请求日志，权限管理或异常处理等功能，这些在web框架Gin或Django中可通过middleware实现，而gRPC中则可使用interceptor，对rpc请求或响应进行拦截处理。</p>
+<p>gRPC服务端跟客户端均可实现各自的拦截器，根据rpc的两种请求方式可分为两种。</p>
+<ul>
+<li>Unary Interceptor（一元拦截器）</li>
+<li>Stream Interceptor（流式拦截器）</li>
+</ul>
+<h2 id="一元拦截器"><a href="#一元拦截器" class="headerlink" title="一元拦截器"></a>一元拦截器</h2><p>对于一元服务器拦截器，只需要定义<code>UnaryServerInterceptor</code>方法即可，其中，<code>handler(ctx, req)</code>即调用rpc方法。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> UnaryServerInterceptor <span class="function"><span class="keyword">func</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    ctx context.Context,    // rpc上下文</span></span></span><br><span class="line"><span class="function"><span class="params">    req <span class="keyword">interface</span>&#123;&#125;,        // rpc请求参数</span></span></span><br><span class="line"><span class="function"><span class="params">    info *UnaryServerInfo,  // rpc方法信息</span></span></span><br><span class="line"><span class="function"><span class="params">    handler UnaryHandler    // rpc方法本身</span></span></span><br><span class="line"><span class="function"><span class="params">)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> handler(ctx, req)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而对于一元客户端拦截器，一样需要定义一个方法<code>UnaryClientInterceptor</code>，其中执行<code>invoker()</code>才真正请求rpc。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> UnaryClientInterceptor <span class="function"><span class="keyword">func</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    ctx context.Context,  // rpc上下文</span></span></span><br><span class="line"><span class="function"><span class="params">    method <span class="keyword">string</span>,        // 调用方法名</span></span></span><br><span class="line"><span class="function"><span class="params">    req,                  // rpc请求参数</span></span></span><br><span class="line"><span class="function"><span class="params">    reply <span class="keyword">interface</span>&#123;&#125;,    // rpc响应结果</span></span></span><br><span class="line"><span class="function"><span class="params">    cc *ClientConn,       // 连接句柄</span></span></span><br><span class="line"><span class="function"><span class="params">    invoker UnaryInvoker, // 调用rpc方法本身</span></span></span><br><span class="line"><span class="function"><span class="params">    opts ...CallOption    // 调用配置</span></span></span><br><span class="line"><span class="function"><span class="params">)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> invoker(ctx, method, req, reply, cc, opts...)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一元拦截器的实现，根据调用handler或invoker的前后，可分为三部分：调用前预处理，调用rpc方法，调用后处理。</p>
+<h2 id="流式拦截器"><a href="#流式拦截器" class="headerlink" title="流式拦截器"></a>流式拦截器</h2><p>流式拦截器的实现，与一元拦截器一致，实现提供的方法即可，方法参数含义如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StreamServerInterceptor <span class="function"><span class="keyword">func</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    srv <span class="keyword">interface</span>&#123;&#125;,        // rpc请求参数</span></span></span><br><span class="line"><span class="function"><span class="params">    ss ServerStream,        // 服务端stream对象</span></span></span><br><span class="line"><span class="function"><span class="params">    info *StreamServerInfo, // rpc方法信息</span></span></span><br><span class="line"><span class="function"><span class="params">    handler StreamHandler   // rpc方法本身</span></span></span><br><span class="line"><span class="function"><span class="params">)</span> <span class="params">(err error)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> handler(src, ss)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StreamClientInterceptor <span class="function"><span class="keyword">func</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    ctx context.Context,   // rpc上下文</span></span></span><br><span class="line"><span class="function"><span class="params">    desc *StreamDesc,      // 流信息</span></span></span><br><span class="line"><span class="function"><span class="params">    cc *ClientConn,        // 连接句柄</span></span></span><br><span class="line"><span class="function"><span class="params">    method <span class="keyword">string</span>,         // 调用方法名</span></span></span><br><span class="line"><span class="function"><span class="params">    streamer Streamer,     // 调用rpc方法本身</span></span></span><br><span class="line"><span class="function"><span class="params">    opts ...CallOption     // 调用配置</span></span></span><br><span class="line"><span class="function"><span class="params">)</span><span class="params">(ClientStream, error)</span></span>&#123;</span><br><span class="line">    <span class="comment">// 流操作预处理</span></span><br><span class="line">    clientStream, err := streamer(ctx, desc, cc, method, opts...)</span><br><span class="line">    <span class="comment">// 根据某些条件，通过clientStream拦截流操作</span></span><br><span class="line">    <span class="keyword">return</span> clientStream, err</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与其他拦截器不同，客户端流式拦截器的实现分为两部分，流操作预处理和流操作拦截，其不能在事后进行rpc方法调用和后处理，只能通过ClientStream对象进行流操作拦截，例如根据特定的metadata，调用<code>ClientStream.CloseSend()</code>终止流操作。</p>
+<h2 id="举个例子"><a href="#举个例子" class="headerlink" title="举个例子"></a>举个例子</h2><p>这里我们将上述四种拦截器都写一个简单输出请求日志的demo，看看实际效果</p>
+<p>demo目录结构如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">rpc</span><br><span class="line">├── base.proto</span><br><span class="line">├── base</span><br><span class="line">│   ├── base.pb.go</span><br><span class="line">│   └── base_grpc.pb.go</span><br><span class="line">├── client</span><br><span class="line">│   └── main.go</span><br><span class="line">├── server</span><br><span class="line">│    └── main.go</span><br><span class="line">├── go.mod</span><br><span class="line">├── go.sum</span><br></pre></td></tr></table></figure>
+
+<p>base.proto文件如下</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">"proto3"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> proto;</span><br><span class="line"></span><br><span class="line"><span class="keyword">option</span> go_package = <span class="string">"base;base"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">BaseService</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">rpc</span> GetTime (TimeRequest) <span class="keyword">returns</span> (TimeResponse)&#123;&#125;</span></span><br><span class="line"><span class="function">  <span class="keyword">rpc</span> Streaming (stream StreamRequest) <span class="keyword">returns</span> (stream StreamResponse)&#123;&#125;</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">message TimeRequest &#123;&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">message TimeResponse &#123;</span></span><br><span class="line"><span class="function">  string time = 1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StreamRequest</span></span>&#123;</span><br><span class="line">  <span class="built_in">string</span> input = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StreamResponse</span></span>&#123;</span><br><span class="line">  <span class="built_in">string</span> output = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行命令<code>protoc --go_out=. --go-grpc_out=. base.prto</code>生成对应的pb文件。</p>
+<p>server.go</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"io"</span></span><br><span class="line">	<span class="string">"net"</span></span><br><span class="line">	<span class="string">"strconv"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line"></span><br><span class="line">	pb <span class="string">"rpc/base"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">	<span class="string">"google.golang.org/grpc/reflection"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> service <span class="keyword">struct</span> &#123;</span><br><span class="line">	pb.UnimplementedBaseServiceServer</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	listen, err := net.Listen(<span class="string">"tcp"</span>, <span class="string">":50051"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">	s := grpc.NewServer(grpc.UnaryInterceptor(UnaryServerInterceptor), grpc.StreamInterceptor(StreamServerInterceptor))</span><br><span class="line">	reflection.Register(s)</span><br><span class="line">	pb.RegisterBaseServiceServer(s, &amp;service&#123;&#125;)</span><br><span class="line">	s.Serve(listen)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">UnaryServerInterceptor</span><span class="params">(ctx context.Context, req <span class="keyword">interface</span>&#123;&#125;, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler)</span> <span class="params">(resp <span class="keyword">interface</span>&#123;&#125;, err error)</span></span> &#123;</span><br><span class="line">	log.Println(<span class="string">"start unary"</span>)</span><br><span class="line">	resp, err = handler(ctx, req)</span><br><span class="line">	log.Printf(<span class="string">"end unary %v\n"</span>, resp)</span><br><span class="line">	<span class="keyword">return</span> resp, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">StreamServerInterceptor</span><span class="params">(srv <span class="keyword">interface</span>&#123;&#125;, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	log.Println(<span class="string">"before stream"</span>)</span><br><span class="line">	err := handler(srv, ss)</span><br><span class="line">	log.Println(<span class="string">"after stream"</span>)</span><br><span class="line">	<span class="keyword">return</span> err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 具体接口实现</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">GetTime</span><span class="params">(ctx context.Context, in *pb.TimeRequest)</span> <span class="params">(*pb.TimeResponse, error)</span></span> &#123;</span><br><span class="line">	now := time.Now().Format(<span class="string">"2006-01-02 15:04:05"</span>)</span><br><span class="line">	<span class="keyword">return</span> &amp;pb.TimeResponse&#123;Time: now&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *service)</span> <span class="title">Streaming</span><span class="params">(stream pb.BaseService_StreamingServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> n := <span class="number">0</span>; ; &#123;</span><br><span class="line">		res, err := stream.Recv()</span><br><span class="line">		<span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		v, _ := strconv.Atoi(res.Input)</span><br><span class="line">        log.Println(v)</span><br><span class="line">		n += v</span><br><span class="line">		stream.Send(&amp;pb.StreamResponse&#123;Output: strconv.Itoa(n)&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>client.go</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"context"</span></span><br><span class="line">	<span class="string">"io"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"strconv"</span></span><br><span class="line"></span><br><span class="line">	pb <span class="string">"rpc/base"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"google.golang.org/grpc"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	conn, err := grpc.Dial(<span class="string">":50051"</span>, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithUnaryInterceptor(UnaryClientInterceptor), grpc.WithStreamInterceptor(StreamClientInterceptor))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Println(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">	c := pb.NewBaseServiceClient(conn)</span><br><span class="line">	</span><br><span class="line">    <span class="comment">// 依次执行unary，stream</span></span><br><span class="line">    _, err = c.GetTime(context.Background(), &amp;pb.TimeRequest&#123;&#125;)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">"===============\n"</span>)</span><br><span class="line">    streaming(c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">UnaryClientInterceptor</span><span class="params">(ctx context.Context, method <span class="keyword">string</span>, req, reply <span class="keyword">interface</span>&#123;&#125;, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	log.Println(<span class="string">"before unary"</span>)</span><br><span class="line">	err := invoker(ctx, method, req, reply, cc, opts...)</span><br><span class="line">	log.Printf(<span class="string">"end unary %v\n"</span>, reply)</span><br><span class="line">	<span class="keyword">return</span> err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">StreamClientInterceptor</span><span class="params">(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method <span class="keyword">string</span>, streamer grpc.Streamer, opts ...grpc.CallOption)</span> <span class="params">(grpc.ClientStream, error)</span></span> &#123;</span><br><span class="line">	log.Println(<span class="string">"before stream"</span>)</span><br><span class="line">	clientStream, err := streamer(ctx, desc, cc, method, opts...)</span><br><span class="line">	log.Println(<span class="string">"check metadata"</span>)</span><br><span class="line">	<span class="keyword">return</span> clientStream, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">streaming</span><span class="params">(client pb.BaseServiceClient)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	stream, _ := client.Streaming(context.Background())</span><br><span class="line">	<span class="keyword">for</span> n := <span class="number">0</span>; n &lt; <span class="number">10</span>; n++ &#123;</span><br><span class="line">		log.Println(<span class="string">"Streaming Send:"</span>, n)</span><br><span class="line">		err := stream.Send(&amp;pb.StreamRequest&#123;Input: strconv.Itoa(n)&#125;)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		res, err := stream.Recv()</span><br><span class="line">		<span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		log.Println(<span class="string">"Streaming Recv:"</span>, res.Output)</span><br><span class="line">	&#125;</span><br><span class="line">	stream.CloseSend()</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>rpc目录下依次执行<code>go run server/main.go</code> 和 <code>go run client/main.go</code>，输出效果如下</p>
+<p><img src="/images/grpc-interceptor.png" alt="输出结果"></p>
+<p>可以明显看出StreamClientInterceptor则是在流处理开始时就输出了两次日志，其余三种拦截器则在请求前后输出两次。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>如果需要使用多个拦截器，grpc-go中提供了相应的四种链接器</p>
+<ul>
+<li><code>grpc.ChainUnaryInterceptor(i ...UnaryServerInterceptor)</code></li>
+<li><code>grpc.ChainStreamInterceptor(i ...StreamServerInterceptor)</code></li>
+<li><code>grpc.WithChainUnaryInterceptor(i ...UnaryClientInterceptor)</code></li>
+<li><code>grpc.WithChainStreamInterceptor(i ...StreamClientInterceptor)</code></li>
+</ul>
+<p>如果grpc版本过老，可能还未提供chain api，可以使用第三方库<a href="https://github.com/grpc-ecosystem/go-grpc-middleware" target="_blank" rel="noopener">grpc-ecosystem/go-grpc-middleware</a>。除了链接器，库中还提供了许多常用的拦截器，例如grpc_zap，grpc_recovery等。当然，特殊需求也可以通过实现对应方法，实现自定义interceptor。</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一元拦截器"><span class="toc-number">1.</span> <span class="toc-text">一元拦截器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#流式拦截器"><span class="toc-number">2.</span> <span class="toc-text">流式拦截器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#举个例子"><span class="toc-number">3.</span> <span class="toc-text">举个例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-number">4.</span> <span class="toc-text">小结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&text=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&is_video=false&description=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=gRPC之interceptor&body=Check out this article: https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&title=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&name=gRPC之interceptor&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/11/08/grpc-interceptor/&t=gRPC之interceptor" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Readability counts.                — The Zen of Python  最近了解到Black之后，项目的代码格式化工具，就从Googel&#x2F;yapf换成了Python&#x2F;Black ，大概喜新厌旧吧。 原项目中，用了flake8+pylint+yapf的三重检查，在替换过程中也遇到了一些问题，结果就是被pylint锤，被flake8锤，不过最终这些问题都在gi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自动格式化工具 Black">
+<meta property="og:url" content="https://www.wzmmmmj.com/2019/06/02/python-black/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="Readability counts.                — The Zen of Python  最近了解到Black之后，项目的代码格式化工具，就从Googel&#x2F;yapf换成了Python&#x2F;Black ，大概喜新厌旧吧。 原项目中，用了flake8+pylint+yapf的三重检查，在替换过程中也遇到了一些问题，结果就是被pylint锤，被flake8锤，不过最终这些问题都在gi">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/star-trending.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/commas.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/continuation.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/slice.png">
+<meta property="article:published_time" content="2019-06-02T21:33:54.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="formatter">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/star-trending.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>自动格式化工具 Black</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2019/08/11/django-orm%E4%B8%AD%E7%9A%84default/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2019/05/12/django-default-join/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/06/02/python-black/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/06/02/python-black/&text=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/06/02/python-black/&is_video=false&description=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=自动格式化工具 Black&body=Check out this article: https://www.wzmmmmj.com/2019/06/02/python-black/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/06/02/python-black/&name=自动格式化工具 Black&description=&lt;blockquote&gt;
+&lt;p&gt;Readability counts.               &lt;/p&gt;
+&lt;p&gt;— The Zen of Python&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;最近了解到Black之后，项目的代码格式化工具，就从&lt;a href=&#34;https://github.com/google/yapf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Googel/yapf&lt;/a&gt;换成了&lt;a href=&#34;https://github.com/python/black&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Python/Black&lt;/a&gt; ，&lt;del&gt;大概喜新厌旧吧&lt;/del&gt;。&lt;/p&gt;
+&lt;p&gt;原项目中，用了&lt;code&gt;flake8+pylint+yapf&lt;/code&gt;的三重检查，在替换过程中也遇到了一些问题，结果就是被pylint锤，被flake8锤，不过最终这些问题都在&lt;a href=&#34;https://github.com/python/black/issues&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;github issue&lt;/a&gt;中找了解答。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Ps: 官方解决方法：有冲突就ignore，disable，大不了remove&lt;/p&gt;
+&lt;/blockquote&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/06/02/python-black/&t=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#trailing-comma"><span class="toc-number">1.</span> <span class="toc-text">trailing comma</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#indentation"><span class="toc-number">2.</span> <span class="toc-text">indentation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#line-breaks-amp-amp-slices"><span class="toc-number">3.</span> <span class="toc-text">line breaks &amp;&amp;  slices</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        自动格式化工具 Black
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-06-02T21:33:54.000Z" itemprop="datePublished">2019/06/02</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>, <a class="tag-link" href="/tags/formatter/" rel="tag">formatter</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>Readability counts.               </p>
+<p>— The Zen of Python</p>
+</blockquote>
+<p>最近了解到Black之后，项目的代码格式化工具，就从<a href="https://github.com/google/yapf" target="_blank" rel="noopener">Googel/yapf</a>换成了<a href="https://github.com/python/black" target="_blank" rel="noopener">Python/Black</a> ，<del>大概喜新厌旧吧</del>。</p>
+<p>原项目中，用了<code>flake8+pylint+yapf</code>的三重检查，在替换过程中也遇到了一些问题，结果就是被pylint锤，被flake8锤，不过最终这些问题都在<a href="https://github.com/python/black/issues" target="_blank" rel="noopener">github issue</a>中找了解答。</p>
+<blockquote>
+<p>Ps: 官方解决方法：有冲突就ignore，disable，大不了remove</p>
+</blockquote>
+<a id="more"></a>
+
+<p><img src="/images/star-trending.png" alt=""></p>
+<h2 id="trailing-comma"><a href="#trailing-comma" class="headerlink" title="trailing comma"></a>trailing comma</h2><p><code>Black</code>自动格式化后，发现换行后只有一行的，末尾并不会加”,”</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># in:</span></span><br><span class="line"></span><br><span class="line">ImportantClass.important_method(exc, limit, lookup_lines, capture_locals, extra_argument)</span><br><span class="line"></span><br><span class="line"><span class="comment"># out:</span></span><br><span class="line"></span><br><span class="line">ImportantClass.important_method(</span><br><span class="line">    exc, limit, lookup_lines, capture_locals, extra_argument  <span class="comment"># 这里并不会加 ","</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>结果就是，被<code>flake8-comma</code>爆锤<code>C812 missing trailing comma</code>，不过<a href="https://github.com/python/black/issues/551" target="_blank" rel="noopener">解决办法</a>也很简单，就是移除<code>flake8-comma</code><img src="/images/commas.png" alt=""></p>
+<h2 id="indentation"><a href="#indentation" class="headerlink" title="indentation"></a>indentation</h2><p>使用<code>yapf</code>期间，函数参数的排序一直是个难题，最近投票才决定使用了如下方式，<code>Black</code>则直接规定了一种方式</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># in:</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">very_important_function</span><span class="params">(template: str, *variables, file: os.PathLike, engine: str, header: bool = True, debug: bool = False)</span>:</span></span><br><span class="line">    <span class="string">"""Applies `variables` to the `template` and writes to `file`."""</span></span><br><span class="line">    <span class="keyword">with</span> open(file, <span class="string">'w'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        ...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># yapf</span></span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">very_important_function</span><span class="params">(template: str, </span></span></span><br><span class="line"><span class="function"><span class="params">                            *variables, </span></span></span><br><span class="line"><span class="function"><span class="params">                            file: os.PathLike, </span></span></span><br><span class="line"><span class="function"><span class="params">                            engine: str, </span></span></span><br><span class="line"><span class="function"><span class="params">                            header: bool = True, </span></span></span><br><span class="line"><span class="function"><span class="params">                            debug: bool = False)</span>:</span></span><br><span class="line">    <span class="string">"""Applies `variables` to the `template` and writes to `file`."""</span></span><br><span class="line">    <span class="keyword">with</span> open(file, <span class="string">'w'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        ...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># black:</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">very_important_function</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    template: str,</span></span></span><br><span class="line"><span class="function"><span class="params">    *variables,</span></span></span><br><span class="line"><span class="function"><span class="params">    file: os.PathLike,</span></span></span><br><span class="line"><span class="function"><span class="params">    engine: str,</span></span></span><br><span class="line"><span class="function"><span class="params">    header: bool = True,</span></span></span><br><span class="line"><span class="function"><span class="params">    debug: bool = False,</span></span></span><br><span class="line"><span class="function"><span class="params">)</span>:</span></span><br><span class="line">    <span class="string">"""Applies `variables` to the `template` and writes to `file`."""</span></span><br><span class="line">    <span class="keyword">with</span> open(file, <span class="string">"w"</span>) <span class="keyword">as</span> f:</span><br><span class="line">        ...</span><br></pre></td></tr></table></figure>
+
+<p>不过前提是需要全局<code>disable bad-continuation</code> ( <a href="https://github.com/python/black/issues/48" target="_blank" rel="noopener">issue</a>) </p>
+<p><img src="/images/continuation.png" alt=""></p>
+<h2 id="line-breaks-amp-amp-slices"><a href="#line-breaks-amp-amp-slices" class="headerlink" title="line breaks &amp;&amp;  slices"></a>line breaks &amp;&amp;  slices</h2><p>因为Black使用了更新的PEP8特性，导致的flake8会有一些奇怪的报错</p>
+<ul>
+<li><code>W503 line break before binary operator</code> </li>
+<li><code>E203 whitespace before &#39;:&#39;</code></li>
+</ul>
+<p>解决办法依旧是<a href="https://github.com/python/black#line-breaks--binary-operators" target="_blank" rel="noopener">ignore</a>。</p>
+<p><img src="/images/slice.png" alt=""></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li><p>yapf中，经常会有两次操作，两次不同的格式，导致统一格式需要另外配置与讨论，而Black则省去了这些步骤，强制性的统一格式化。</p>
+</li>
+<li><p>Black中的可配置项少，yapf在这方面则具有很高的自由度。</p>
+</li>
+<li><p>虽然Black在格式方面强制性，不过字符长度是个例外，在一些特殊场景下，默许代码超出字符长度，如果想要改变格式化结果，可能需要在代码逻辑上进行改动。</p>
+</li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#trailing-comma"><span class="toc-number">1.</span> <span class="toc-text">trailing comma</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#indentation"><span class="toc-number">2.</span> <span class="toc-text">indentation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#line-breaks-amp-amp-slices"><span class="toc-number">3.</span> <span class="toc-text">line breaks &amp;&amp;  slices</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/06/02/python-black/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/06/02/python-black/&text=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/06/02/python-black/&is_video=false&description=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=自动格式化工具 Black&body=Check out this article: https://www.wzmmmmj.com/2019/06/02/python-black/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/06/02/python-black/&title=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/06/02/python-black/&name=自动格式化工具 Black&description=&lt;blockquote&gt;
+&lt;p&gt;Readability counts.               &lt;/p&gt;
+&lt;p&gt;— The Zen of Python&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;最近了解到Black之后，项目的代码格式化工具，就从&lt;a href=&#34;https://github.com/google/yapf&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Googel/yapf&lt;/a&gt;换成了&lt;a href=&#34;https://github.com/python/black&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Python/Black&lt;/a&gt; ，&lt;del&gt;大概喜新厌旧吧&lt;/del&gt;。&lt;/p&gt;
+&lt;p&gt;原项目中，用了&lt;code&gt;flake8+pylint+yapf&lt;/code&gt;的三重检查，在替换过程中也遇到了一些问题，结果就是被pylint锤，被flake8锤，不过最终这些问题都在&lt;a href=&#34;https://github.com/python/black/issues&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;github issue&lt;/a&gt;中找了解答。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Ps: 官方解决方法：有冲突就ignore，disable，大不了remove&lt;/p&gt;
+&lt;/blockquote&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/06/02/python-black/&t=自动格式化工具 Black" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

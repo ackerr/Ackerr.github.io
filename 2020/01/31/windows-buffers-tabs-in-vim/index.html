@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Vim中的buffer，tab和window是容易混淆的概念，vim中输入:help window，会对三个概念进行简短解释:  Summary:A buffer is the in-memory text of a file.A window is a viewport on a buffer.A tab page is a collection of windows.  对于常用IDE的同学，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vim中的Buffers, Windows, Tabs">
+<meta property="og:url" content="https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="Vim中的buffer，tab和window是容易混淆的概念，vim中输入:help window，会对三个概念进行简短解释:  Summary:A buffer is the in-memory text of a file.A window is a viewport on a buffer.A tab page is a collection of windows.  对于常用IDE的同学，">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/vim-tabs-windows-buffers.jpg">
+<meta property="article:published_time" content="2020-01-31T19:50:06.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="vim">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/vim-tabs-windows-buffers.jpg">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>Vim中的Buffers, Windows, Tabs</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2020/03/28/vim-startuptime-optimize/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2019/12/14/Django-Model-ManyToManyField/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&text=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&is_video=false&description=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Vim中的Buffers, Windows, Tabs&body=Check out this article: https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&name=Vim中的Buffers, Windows, Tabs&description=&lt;p&gt;Vim中的buffer，tab和window是容易混淆的概念，vim中输入&lt;code&gt;:help window&lt;/code&gt;，会对三个概念进行简短解释:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Summary:&lt;br&gt;A buffer is the in-memory text of a file.&lt;br&gt;A window is a viewport on a buffer.&lt;br&gt;A tab page is a collection of windows.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;对于常用IDE的同学，如果把这几个概念带入IDE中，常会摸不着头脑 &lt;del&gt;比如我&lt;/del&gt;。对照下图，应该更容易理解&lt;br&gt;&lt;img src=&#34;/images/vim-tabs-windows-buffers.jpg&#34; alt=&#34;Tabs Windows Buffers&#34;&gt;&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&t=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Buffers"><span class="toc-number">1.</span> <span class="toc-text">Buffers</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Tips"><span class="toc-number">1.1.</span> <span class="toc-text">Tips</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Windows"><span class="toc-number">2.</span> <span class="toc-text">Windows</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Tabs"><span class="toc-number">3.</span> <span class="toc-text">Tabs</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Vim中的Buffers, Windows, Tabs
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-01-31T19:50:06.000Z" itemprop="datePublished">2020/01/31</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/vim/" rel="tag">vim</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>Vim中的buffer，tab和window是容易混淆的概念，vim中输入<code>:help window</code>，会对三个概念进行简短解释:</p>
+<blockquote>
+<p>Summary:<br>A buffer is the in-memory text of a file.<br>A window is a viewport on a buffer.<br>A tab page is a collection of windows.</p>
+</blockquote>
+<p>对于常用IDE的同学，如果把这几个概念带入IDE中，常会摸不着头脑 <del>比如我</del>。对照下图，应该更容易理解<br><img src="/images/vim-tabs-windows-buffers.jpg" alt="Tabs Windows Buffers"></p>
+<a id="more"></a>
+
+<h3 id="Buffers"><a href="#Buffers" class="headerlink" title="Buffers"></a>Buffers</h3><blockquote>
+<p>A buffer is the in-memory text of a file.</p>
+</blockquote>
+<p>Buffer即加载在内存中内容，常为一个文件，并且一个文件只会存在一个buffer。通过<code>vim a.txt b.txt</code>会打开两个文件buffer，同时会在编辑a.txt，接着执行<code>:edit c.txt</code>，窗口会显示c.txt文件，通过 <code>:ls</code> 可以显示所有buffer，这里会显示三行记录。</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">:<span class="keyword">ls</span></span><br><span class="line">  <span class="number">1</span> #h   <span class="string">"a.txt"</span>                        <span class="built_in">line</span> <span class="number">1</span></span><br><span class="line">  <span class="number">2</span>      <span class="string">"b.txt"</span>                        <span class="built_in">line</span> <span class="number">0</span></span><br><span class="line">  <span class="number">3</span> %<span class="keyword">a</span>   <span class="string">"c.txt"</span>                        <span class="built_in">line</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到a.txt，c.txt前面会有标识，相关标识含义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">– （非活动的缓冲区）</span><br><span class="line">a （当前被激活缓冲区）</span><br><span class="line">h （隐藏的缓冲区）</span><br><span class="line">% （当前的缓冲区）</span><br><span class="line"># （交换缓冲区）</span><br><span class="line">&#x3D; （只读缓冲区）</span><br><span class="line">+ （已经更改的缓冲区）</span><br></pre></td></tr></table></figure>
+
+<p>所以%a表示当前激活的buffer，而#h则表示上一个展示的buffer且是隐藏的。<br>通过<code>:b &lt;编号&gt;</code>或<code>:b &lt;文件全称&gt;</code>可切换到相应的buffer，当然也可以通过<code>:bprev</code>或<code>:bnext</code>前后切换buffer，<code>:bdelete &lt;编号或文件全称&gt;</code>删除某个buffer。如果vimrc中声明<code>set hidden</code>，则在文件修改后未保存可以切换至其他buffer，而如果显式声明<code>set nohidden</code>则需要先保存。</p>
+<h4 id="Tips"><a href="#Tips" class="headerlink" title="Tips"></a>Tips</h4><p>如果使用NERDTree时出现:bd退出vim session的时候，可以看看<a href="https://github.com/preservim/nerdtree/issues/400" target="_blank" rel="noopener">此issue</a>，通过<code>:bp&lt;CR&gt;bd #&lt;CR&gt;</code>可以达到删除当前buffer，并回到上一个buffer的效果。</p>
+<h3 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h3><blockquote>
+<p>A window is a viewport on a buffer.</p>
+</blockquote>
+<p>Window即用于展示buffer的窗口，通过该窗口才能看到buffer中的内容。 使用<code>:split</code>或<code>:vsplit</code>，可实现分屏效果，在新窗口中展示当前buffer，也可在操作后加文件，新窗口中展示新打开的buffer。也就是说，多个window可以展示相同的buffer。</p>
+<h3 id="Tabs"><a href="#Tabs" class="headerlink" title="Tabs"></a>Tabs</h3><blockquote>
+<p>A tab page is a collection of windows.</p>
+</blockquote>
+<p>Tab即多个window的组合，一个tab中可以展示多个window，通过<code>:tabp/:tabn 或 gT/gt</code>前后切换tab，以及<code>:tabc</code>关闭当前tab，更多操作可见<code>:help tab-page</code>。</p>
+<p>使用tab的推荐做法是进行分组管理，例如无关项目或不同类型的代码(server端与client端)都可以在多个tab中管理。在buffer中提到一个文件只会存在一个buffer，所以在多个tab的相同buffer，其实他们是同一个buffer，在某一处被关闭时，其他tab中也相应的不可见。</p>
+<p>当然，不同人对三者的看法与使用习惯是不同的，例如有些人喜欢一个tab对应一个buffer，类似IDE中的布局，也有人不使用tab，对于什么场景下使用buffer还是tab，因人而异，一句话就是怎么舒服怎么来。</p>
+<blockquote>
+<p>参考：<br><a href="https://stackoverflow.com/questions/26708822/why-do-vim-experts-prefer-buffers-over-tabs" target="_blank" rel="noopener">buffers or tabs</a><br><a href="https://stackoverflow.com/questions/102384/using-vims-tabs-like-buffers/103590#103590" target="_blank" rel="noopener">using vim tabs like buffers</a><br><a href="https://sanctum.geek.nz/arabesque/buffers-windows-tabs/" target="_blank" rel="noopener">buffers windows tabs</a><br><a href="https://joshldavis.com/2014/04/05/vim-tab-madness-buffers-vs-tabs/" target="_blank" rel="noopener">vim tab madness buffers vs tabs</a></p>
+</blockquote>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Buffers"><span class="toc-number">1.</span> <span class="toc-text">Buffers</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Tips"><span class="toc-number">1.1.</span> <span class="toc-text">Tips</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Windows"><span class="toc-number">2.</span> <span class="toc-text">Windows</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Tabs"><span class="toc-number">3.</span> <span class="toc-text">Tabs</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&text=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&is_video=false&description=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Vim中的Buffers, Windows, Tabs&body=Check out this article: https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&title=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&name=Vim中的Buffers, Windows, Tabs&description=&lt;p&gt;Vim中的buffer，tab和window是容易混淆的概念，vim中输入&lt;code&gt;:help window&lt;/code&gt;，会对三个概念进行简短解释:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Summary:&lt;br&gt;A buffer is the in-memory text of a file.&lt;br&gt;A window is a viewport on a buffer.&lt;br&gt;A tab page is a collection of windows.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;对于常用IDE的同学，如果把这几个概念带入IDE中，常会摸不着头脑 &lt;del&gt;比如我&lt;/del&gt;。对照下图，应该更容易理解&lt;br&gt;&lt;img src=&#34;/images/vim-tabs-windows-buffers.jpg&#34; alt=&#34;Tabs Windows Buffers&#34;&gt;&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2020/01/31/windows-buffers-tabs-in-vim/&t=Vim中的Buffers, Windows, Tabs" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

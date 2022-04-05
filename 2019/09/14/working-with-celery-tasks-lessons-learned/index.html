@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="本文为渣翻文章，原文地址: 这里  本文将使用一个简单的例子来展示使用Celery可以遇到的最常见的问题。 栗子假设我们正在写一个网上商城APP，一个模块负责新用户注册成功后，发送欢迎邮箱。 本文使用Django的伪代码，因为简短易懂，且可以应用到其他web框架。 处理create user的请求如下: 12345@transaction.commit_on_successdef create_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Celery的一些经验教训（翻）">
+<meta property="og:url" content="https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="本文为渣翻文章，原文地址: 这里  本文将使用一个简单的例子来展示使用Celery可以遇到的最常见的问题。 栗子假设我们正在写一个网上商城APP，一个模块负责新用户注册成功后，发送欢迎邮箱。 本文使用Django的伪代码，因为简短易懂，且可以应用到其他web框架。 处理create user的请求如下: 12345@transaction.commit_on_successdef create_">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-09-14T18:02:09.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Celery">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>使用Celery的一些经验教训（翻）</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2019/09/22/git-config-include/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2019/08/25/mysql-innodb-lock/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&text=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&is_video=false&description=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=使用Celery的一些经验教训（翻）&body=Check out this article: https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&name=使用Celery的一些经验教训（翻）&description=&lt;blockquote&gt;
+&lt;p&gt;本文为渣翻文章，原文地址: &lt;a href=&#34;https://blog.daftcode.pl/working-with-asynchronous-celery-tasks-lessons-learned-32bb7495586b&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;这里&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;本文将使用一个简单的例子来展示使用Celery可以遇到的最常见的问题。&lt;/p&gt;
+&lt;h3 id=&#34;栗子&#34;&gt;&lt;a href=&#34;#栗子&#34; class=&#34;headerlink&#34; title=&#34;栗子&#34;&gt;&lt;/a&gt;栗子&lt;/h3&gt;&lt;p&gt;假设我们正在写一个网上商城APP，一个模块负责新用户注册成功后，发送欢迎邮箱。&lt;/p&gt;
+&lt;p&gt;本文使用Django的伪代码，因为简短易懂，且可以应用到其他web框架。&lt;/p&gt;
+&lt;p&gt;处理&lt;code&gt;create user&lt;/code&gt;的请求如下:&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;meta&#34;&gt;@transaction.commit_on_success&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;function&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;def&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;create_user&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(request)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;   user = User.objects.create(name=request.name, email=request.email)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;   send_email(email=user.email, subject=&lt;span class=&#34;string&#34;&gt;&#39;Welcome&#39;&lt;/span&gt;, content=&lt;span class=&#34;string&#34;&gt;&#39;...&#39;&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;   &lt;span class=&#34;keyword&#34;&gt;return&lt;/span&gt; HttpResponse(render_html(&lt;span class=&#34;string&#34;&gt;&#39;user_created.html&#39;&lt;/span&gt;))&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;首先，我们用ORM创建一个包含&lt;code&gt;name, email&lt;/code&gt;的User对象，然后调用&lt;code&gt;send_email&lt;/code&gt;方法，通过STMP发送邮件给用户，最后返回HTML页面。这里还使用了装饰器&lt;code&gt;transaction.commit_on_success&lt;/code&gt;， 在函数执行结束并且没有抛出异常时，自动提交User对象至数据库。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&t=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#栗子"><span class="toc-number">1.</span> <span class="toc-text">栗子</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#仔细选择异步任务参数"><span class="toc-number">2.</span> <span class="toc-text">仔细选择异步任务参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#发送任务与数据库事务"><span class="toc-number">3.</span> <span class="toc-text">发送任务与数据库事务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#棘手的失败任务"><span class="toc-number">4.</span> <span class="toc-text">棘手的失败任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#late-acknowledgment"><span class="toc-number">5.</span> <span class="toc-text">late acknowledgment</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        使用Celery的一些经验教训（翻）
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-09-14T18:02:09.000Z" itemprop="datePublished">2019/09/14</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E7%BF%BB%E8%AF%91%E7%B3%BB%E5%88%97/">翻译系列</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Celery/" rel="tag">Celery</a>, <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>本文为渣翻文章，原文地址: <a href="https://blog.daftcode.pl/working-with-asynchronous-celery-tasks-lessons-learned-32bb7495586b" target="_blank" rel="noopener">这里</a></p>
+</blockquote>
+<p>本文将使用一个简单的例子来展示使用Celery可以遇到的最常见的问题。</p>
+<h3 id="栗子"><a href="#栗子" class="headerlink" title="栗子"></a>栗子</h3><p>假设我们正在写一个网上商城APP，一个模块负责新用户注册成功后，发送欢迎邮箱。</p>
+<p>本文使用Django的伪代码，因为简短易懂，且可以应用到其他web框架。</p>
+<p>处理<code>create user</code>的请求如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@transaction.commit_on_success</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create_user</span><span class="params">(request)</span>:</span></span><br><span class="line">   user = User.objects.create(name=request.name, email=request.email)</span><br><span class="line">   send_email(email=user.email, subject=<span class="string">'Welcome'</span>, content=<span class="string">'...'</span>)</span><br><span class="line">   <span class="keyword">return</span> HttpResponse(render_html(<span class="string">'user_created.html'</span>))</span><br></pre></td></tr></table></figure>
+
+<p>首先，我们用ORM创建一个包含<code>name, email</code>的User对象，然后调用<code>send_email</code>方法，通过STMP发送邮件给用户，最后返回HTML页面。这里还使用了装饰器<code>transaction.commit_on_success</code>， 在函数执行结束并且没有抛出异常时，自动提交User对象至数据库。</p>
+<a id="more"></a>
+
+<h3 id="仔细选择异步任务参数"><a href="#仔细选择异步任务参数" class="headerlink" title="仔细选择异步任务参数"></a>仔细选择异步任务参数</h3><p>如你所知，通过SMTP发送邮箱会导致一些问题，例如服务器响应时间过长，服务不可用。我们提取<code>send_email</code>相关逻辑给Celery task，让发送邮件是一个单独的过程。让<code>create_user</code>可以更快的返回结果，无论发送邮件有什么潜在的问题。修改之后，代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@transaction.commit_on_success</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create_user</span><span class="params">(request)</span>:</span></span><br><span class="line">   user = User.objects.create(name=request.name, email=request.email)</span><br><span class="line">   send_welcome_email_task.delay(user)</span><br><span class="line">   <span class="keyword">return</span> HttpResponse(render_html(<span class="string">'user_created.html'</span>))</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.task()</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">send_welcome_email_task</span><span class="params">(user)</span>:</span></span><br><span class="line">   send_email(email=user.email, subject=<span class="string">'Welcome'</span>, content=<span class="string">'...'</span>)</span><br></pre></td></tr></table></figure>
+
+<p>一切看起来变得简洁了，但有个小问题。这里传递给<code>send_welcome_email_task</code>的参数是一个User实例，一个绑定了当前数据库连接的ORM对象。这个task将由不同的进程执行，使用不同的数据库连接，所以传参使用User实例并不是一个好主意。此外，<strong>User对象可能会被同步修改，导致Celery中使用一个过时的版本。</strong>如果对象中还包括一些复杂的字段像datatime类型，不能被序列化为JSON（Celery最常用的序列化）。但不要担心，可以使用user.id代替user作为task的参数解决这个问题。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@transaction.commit_on_success</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create_user</span><span class="params">(request)</span>:</span></span><br><span class="line">   user = User.objects.create(name=request.name, email=request.email)</span><br><span class="line">   send_welcome_email_task.delay(user.id)</span><br><span class="line">   <span class="keyword">return</span> HttpResponse(render_html(<span class="string">'user_created.html'</span>))</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.task()</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">send_welcome_email_task</span><span class="params">(user_id)</span>:</span></span><br><span class="line">   user = User.objects.get(id=user_id)</span><br><span class="line">   send_email(email=user.email, subject=<span class="string">'Welcome'</span>, content=<span class="string">'...'</span>)</span><br></pre></td></tr></table></figure>
+
+<p>现在，序列化<code>user.id</code>并不会有什么问题，因为传参现在只是一个简单的int。并且user实例将通过id在执行task开始时，从数据库中读取，所以可以确定现在的user对象是最新的一个版本。</p>
+<blockquote>
+<p>使用简单类型作为task的传参</p>
+</blockquote>
+<p>记住，实例对象在发送到broker之后，执行之前，可能会被更新。这是特别重要的一点，当两个task同时操作一个实例对象时，第二个应该知道第一个所做的更改。</p>
+<blockquote>
+<p>执行Celery task时，总是获取实例对象的最新版本</p>
+</blockquote>
+<h3 id="发送任务与数据库事务"><a href="#发送任务与数据库事务" class="headerlink" title="发送任务与数据库事务"></a>发送任务与数据库事务</h3><p>如果<code>render_html</code>需要执行很长时间，Celery worker可能在<code>create_user</code>  提交user实例完成之前，执行task，导致<code>send_welcome_email_task</code>中抛出异常<code>User object not found in the database for a given id</code>。这个场景也可能是在将task发生Celery broker之后，执行一些耗时长的操作导致。</p>
+<p>那怎么解决这个问题呢？首先想到的是，延迟执行task的时间，例如2秒，确保Celery worker获得broker之前函数返回：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">send_welcome_email_task.apply_async(args=(user.id,), countdown=<span class="number">2</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这种简单的解决方法，在执行<code>render_html</code>需要超过2秒的时候，显然会失败。它将导致发生一份不必要的邮件。</p>
+<p>那有没有更好的方法？这里不得不确保Celery task发送至broker不能早于数据库事务提交。为了实现这个条件，可以使用装饰器<code>transaction.commit_manually</code>去控制数据库事务。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@transaction.commit_manually</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create_user</span><span class="params">(request)</span>:</span></span><br><span class="line">   <span class="keyword">try</span>:</span><br><span class="line">       user = User.objects.create(name=request.name, email=request.email)</span><br><span class="line">       response = HttpResponse(render_html(<span class="string">'user_created.html'</span>))</span><br><span class="line">   <span class="keyword">except</span>:</span><br><span class="line">       transaction.rollback()</span><br><span class="line">       <span class="keyword">raise</span></span><br><span class="line">   <span class="keyword">else</span>:</span><br><span class="line">       transaction.commit()</span><br><span class="line">       send_welcome_email.delay(user.id)</span><br><span class="line">       <span class="keyword">return</span> response</span><br></pre></td></tr></table></figure>
+
+<p>有了这个新的调整，在事务被提交后，task才被发送至Celery，从而解决了竞态。这种实现方法还有一个优点：</p>
+<p>只有在事务成功提交后，并且<code>create_user</code>函数没有任何异常的情况下，才会发送task至Celery。先前<code>render_html</code>导致的异常，依然会发生邮箱的情况，并不是我们所期望的。</p>
+<blockquote>
+<p>tip: 大型项目中，解决这种问题的最好方法是扩展Celery task的基类，在事务提交后，使用事务事件发送task。这将自动化各式各样异步任务操作数据库的过程，使代码更加简洁（<a href="https://medium.com/hypertrack/dealing-with-database-transactions-in-django-celery-eac351d52f5f" target="_blank" rel="noopener">一个Django例子</a>）</p>
+</blockquote>
+<blockquote>
+<p>在函数成功提交事务并且没有任何异常后，再发送异步任务至Celery broker</p>
+</blockquote>
+<h3 id="棘手的失败任务"><a href="#棘手的失败任务" class="headerlink" title="棘手的失败任务"></a>棘手的失败任务</h3><p>让事情变得复杂一些。如果有一个短暂的SMTP服务问题，重试发送邮件是一个很好的结果。我们可以用Celery的重试机制来实现。它需要添加两个参数给Celery task装饰器和捕获异常。</p>
+<p>现在如果有任何问题在发送邮件期间发生，task将会每60秒重新执行，直到它执行成功或失败达到上限次数（最大120次）。从理论上讲，这应该没有任何问题，但如果使用Redis作为broker，不一定。为什么呢？</p>
+<p>Redis使用<code>visibility_timeout</code>参数来定义时间限制，worker需要知道这个task执行是否成功，如果没有，这个task将被定义为丢失，会被重新发送至一个worker。<code>visibility_timeout</code>的默认值是一个小时。在这个例子中，它意味着如果一个电子邮件一个小时没有被发送，task将被重新发送。然而如果task没有丢失，而是在等待重试中，将会出现两个相同的task。如果最后两个都执行成功，用户将会收到两份邮件，这是不希望出现的行为。</p>
+<blockquote>
+<p>tip: 如果你想避免与<code>visibility_timeout</code>相关问题，可以考虑使用RabbitMQ作为Celery broker</p>
+</blockquote>
+<blockquote>
+<p>更多关于<code>visibility_timeout</code>信息可以看<a href="http://docs.celeryproject.org/en/latest/getting-started/brokers/redis.html" target="_blank" rel="noopener">Celery文档</a>和<a href="https://github.com/celery/kombu/issues/337" target="_blank" rel="noopener">GitHub issue</a></p>
+</blockquote>
+<p>第一个想到的解决方法是增加<code>visibility_timeout</code>，例如2小时，但如果其他任务重新超过2小时呢？如果不需要去重发等待超过一个小时的任务，当一个任务真的丢失了（例如worker网络不可用）</p>
+<p>最好的办法是编写一个异步任务，不关心任务执行多少次，但核心逻辑（这里是发送邮件）执行不超过一次。</p>
+<p>这就是所谓的幂等性任务，幂等使任务必须遵循两个步骤。</p>
+<p>首先，任务执行开始时，我们必须检查邮件是否已经被发送。为了达到要求，需要给User表增加<code>is_welcome_email_sent</code>布尔字段，如果字段为True，异步任务应该不做任何事，否则，应该发送邮件并将<code>is_welcome_email_sent</code>设置为True。</p>
+<p>第二，需要保证代码在竞态条件下，可能发生两个任务同时试图检查<code>is_welcome_email_sent</code>值。如果发生，一份邮件会被发生两次。这里将使用读锁<code>select_for_update()</code>来保证user对象是同一时间只有一个worker在处理。其他的任务不得不等待<code>select_for_update()</code>，直到第一个锁被释放（提交事务）。答案应该如下所示：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@transaction.commit_on_success</span></span><br><span class="line"><span class="meta">@app.task(bind=True, default_retry_delay=60, max_retries=120)</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">send_welcome_email_task</span><span class="params">(user_id)</span>:</span></span><br><span class="line">   user = User.objects.select_for_update().get(id=user_id)</span><br><span class="line">   <span class="keyword">if</span> <span class="keyword">not</span> user.is_welcome_email_sent:</span><br><span class="line">       <span class="keyword">try</span>:</span><br><span class="line">           send_email(email=user.email, subject=<span class="string">'Welcome'</span>, content=<span class="string">'...'</span>)</span><br><span class="line">       <span class="keyword">except</span> SMTPException <span class="keyword">as</span> e:</span><br><span class="line">           self.retry(exc=e)</span><br><span class="line">       <span class="keyword">else</span>: <span class="comment"># no exception</span></span><br><span class="line">          user.is_welcome_email_sent = <span class="literal">True</span></span><br><span class="line">          user.save()</span><br></pre></td></tr></table></figure>
+
+<p>即使一个任务会在多个worker之间，但只有第一个真正执行。剩下的任务只会检查是否已经完成，不会造成其他副作用。</p>
+<blockquote>
+<p>保证幂等性，确保task只完成一次</p>
+</blockquote>
+<h3 id="late-acknowledgment"><a href="#late-acknowledgment" class="headerlink" title="late acknowledgment"></a>late acknowledgment</h3><p>当所有任务都是幂等时，可以使用<code>late acknowledgment</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@app.task(bind=True, default_retry_delay=60, max_retries=120, acks_late=True)</span></span><br></pre></td></tr></table></figure>
+
+<p>默认情况下，worker确认task仅仅在task被broker接收时（执行task前），称为<code>early acknowledgment</code>。这意味着如果执行过程中，worker奔溃，task不会被再次执行，因为它被认为执行成功。结果就是这个task不会被完成。</p>
+<p>在设置为<code>late acknowledgment</code>后，task会在worker执行后确认。如果worker执行过程中奔溃，task会再次执行。这是一个好的解决方式，因为可以确保整个任务至少被执行一次。不过它也有一次缺点：大部分task会被执行两次。幸运地，我们的task都是幂等的，所以我们防止业务员逻辑不会被多次执行。</p>
+<blockquote>
+<p>使用<code>late acknowledgment</code>，确保幂等的task一定会被执行</p>
+</blockquote>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#栗子"><span class="toc-number">1.</span> <span class="toc-text">栗子</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#仔细选择异步任务参数"><span class="toc-number">2.</span> <span class="toc-text">仔细选择异步任务参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#发送任务与数据库事务"><span class="toc-number">3.</span> <span class="toc-text">发送任务与数据库事务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#棘手的失败任务"><span class="toc-number">4.</span> <span class="toc-text">棘手的失败任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#late-acknowledgment"><span class="toc-number">5.</span> <span class="toc-text">late acknowledgment</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&text=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&is_video=false&description=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=使用Celery的一些经验教训（翻）&body=Check out this article: https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&title=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&name=使用Celery的一些经验教训（翻）&description=&lt;blockquote&gt;
+&lt;p&gt;本文为渣翻文章，原文地址: &lt;a href=&#34;https://blog.daftcode.pl/working-with-asynchronous-celery-tasks-lessons-learned-32bb7495586b&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;这里&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;本文将使用一个简单的例子来展示使用Celery可以遇到的最常见的问题。&lt;/p&gt;
+&lt;h3 id=&#34;栗子&#34;&gt;&lt;a href=&#34;#栗子&#34; class=&#34;headerlink&#34; title=&#34;栗子&#34;&gt;&lt;/a&gt;栗子&lt;/h3&gt;&lt;p&gt;假设我们正在写一个网上商城APP，一个模块负责新用户注册成功后，发送欢迎邮箱。&lt;/p&gt;
+&lt;p&gt;本文使用Django的伪代码，因为简短易懂，且可以应用到其他web框架。&lt;/p&gt;
+&lt;p&gt;处理&lt;code&gt;create user&lt;/code&gt;的请求如下:&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;meta&#34;&gt;@transaction.commit_on_success&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;function&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;def&lt;/span&gt; &lt;span class=&#34;title&#34;&gt;create_user&lt;/span&gt;&lt;span class=&#34;params&#34;&gt;(request)&lt;/span&gt;:&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;   user = User.objects.create(name=request.name, email=request.email)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;   send_email(email=user.email, subject=&lt;span class=&#34;string&#34;&gt;&#39;Welcome&#39;&lt;/span&gt;, content=&lt;span class=&#34;string&#34;&gt;&#39;...&#39;&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;   &lt;span class=&#34;keyword&#34;&gt;return&lt;/span&gt; HttpResponse(render_html(&lt;span class=&#34;string&#34;&gt;&#39;user_created.html&#39;&lt;/span&gt;))&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;首先，我们用ORM创建一个包含&lt;code&gt;name, email&lt;/code&gt;的User对象，然后调用&lt;code&gt;send_email&lt;/code&gt;方法，通过STMP发送邮件给用户，最后返回HTML页面。这里还使用了装饰器&lt;code&gt;transaction.commit_on_success&lt;/code&gt;， 在函数执行结束并且没有抛出异常时，自动提交User对象至数据库。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2019/09/14/working-with-celery-tasks-lessons-learned/&t=使用Celery的一些经验教训（翻）" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

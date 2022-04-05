@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="经历一天多次黑屏重启，初步完成了首次超频之旅。本文记录一下作为萌新超频的整个过程，就当图一乐，真正学技术还得看贴吧。 前言先介绍一下平台  CPU：AMD Ryzen 5800x 主板：微星B550-M 显卡：微星RTX 3070 内存：芝奇幻光戟3200MHz c16   本篇文章中使用到的软件及在本文中的用途  AIDA64：硬件检测工具，对CPU进行压力测试，判断CPU稳定性 CPU-Z：侦">
+<meta property="og:type" content="article">
+<meta property="og:title" content="装机实录之超频篇">
+<meta property="og:url" content="https://www.wzmmmmj.com/2021/01/10/overclock/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="经历一天多次黑屏重启，初步完成了首次超频之旅。本文记录一下作为萌新超频的整个过程，就当图一乐，真正学技术还得看贴吧。 前言先介绍一下平台  CPU：AMD Ryzen 5800x 主板：微星B550-M 显卡：微星RTX 3070 内存：芝奇幻光戟3200MHz c16   本篇文章中使用到的软件及在本文中的用途  AIDA64：硬件检测工具，对CPU进行压力测试，判断CPU稳定性 CPU-Z：侦">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-1.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-2.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-3.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-4.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-5.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-6.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-7.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-8.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-9.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-10.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-11.png">
+<meta property="og:image" content="https://www.wzmmmmj.com/images/overclocking-12.png">
+<meta property="article:published_time" content="2021-01-10T23:51:41.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.wzmmmmj.com/images/overclocking-1.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>装机实录之超频篇</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2021/01/24/golang-context/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2020/12/13/diy-computer-install/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2021/01/10/overclock/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2021/01/10/overclock/&text=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2021/01/10/overclock/&is_video=false&description=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=装机实录之超频篇&body=Check out this article: https://www.wzmmmmj.com/2021/01/10/overclock/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2021/01/10/overclock/&name=装机实录之超频篇&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2021/01/10/overclock/&t=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CPU超频"><span class="toc-number">2.</span> <span class="toc-text">CPU超频</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#显卡超频"><span class="toc-number">3.</span> <span class="toc-text">显卡超频</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存超频"><span class="toc-number">4.</span> <span class="toc-text">内存超频</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        装机实录之超频篇
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2021-01-10T23:51:41.000Z" itemprop="datePublished">2021/01/10</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>经历一天多次黑屏重启，初步完成了首次超频之旅。本文记录一下作为萌新超频的整个过程，就当图一乐，真正学技术还得看贴吧。</p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>先介绍一下平台</p>
+<ul>
+<li>CPU：AMD Ryzen 5800x</li>
+<li>主板：微星B550-M</li>
+<li>显卡：微星RTX 3070</li>
+<li>内存：芝奇幻光戟3200MHz c16 </li>
+</ul>
+<p>本篇文章中使用到的软件及在本文中的用途</p>
+<ul>
+<li><a href="https://www.aida64.com/downloads" target="_blank" rel="noopener">AIDA64</a>：硬件检测工具，对CPU进行压力测试，判断CPU稳定性</li>
+<li><a href="https://www.cpuid.com/softwares/cpu-z.html" target="_blank" rel="noopener">CPU-Z</a>：侦察CPU信息，对CPU进行单核/多核评分和稳定性测试</li>
+<li><a href="https://www.amd.com/zh-hans/technologies/ryzen-master" target="_blank" rel="noopener">AMD Ryzen Master</a>：AMD官方提供的锐龙系CPU超频工具</li>
+<li><a href="https://www.techpowerup.com/download/gpu-z/" target="_blank" rel="noopener">GPU-Z</a>：侦察显卡信息</li>
+<li><a href="https://benchmarks.ul.com/3dmark" target="_blank" rel="noopener">3DMark</a>：通过Time spy压力测试，判断显卡稳定性</li>
+<li><a href="https://www.msi.com/Landing/afterburner" target="_blank" rel="noopener">Afterburner</a>：显卡超频工具，监控硬件图标</li>
+<li><a href="https://www.guru3d.com/files-details/rtss-rivatuner-statistics-server-download.html" target="_blank" rel="noopener">RTSS</a>：显示Afterburner中监控的硬件指标</li>
+</ul>
+<h2 id="CPU超频"><a href="#CPU超频" class="headerlink" title="CPU超频"></a>CPU超频</h2><p>CPU下的超频需要主板和CPU同时支持，Intel这边需要型号末尾为K，Z系列主板，而AMD锐龙全系列支持，除部分A系列主板外。</p>
+<p>通过CPU-Z查看默频下的cpu信息，顺便记一下默频跑分（单核661.5/多核6584.4），如下图所示</p>
+<p><img src="/images/overclocking-1.png" alt="默频跑分"></p>
+<p>大部分教程中，会通过BIOS修改参数进行超频，但此方法需要来回重启电脑进入BIOS，许多主板产商会提供相关的超频工具，这里我们用AMD官方的超频工具AMD Ryzen Master进行超频。</p>
+<p>打开AMD Ryzen Master，面板中可看到当前CPU核心频率和电压以及它们的最大值，如下图</p>
+<p><img src="/images/overclocking-2.png" alt="默频"></p>
+<p>如果想要超频，只需调整上图右侧控制模式为手动，微调频率和电压即可。这里推荐核心频率每次增加200MHz，点击运行和测试，如果测试过程中出现死机或重启的情况，适当的上调电压，再重复上述过程，直达达到预期频率。至于CPU的最佳频率请自行搜索。如下图所示，CPU核心频率从默频3.8GHz提高到了4.6GHz，并通过测试。</p>
+<p><img src="/images/overclocking-3.png" alt="超频后"></p>
+<p>接着再通过CPU-Z测试一下当前频率的跑分（单核631.1/多核6681.0），对比默频下的跑分，发现虽然多核分数提高了，但单核分数反而降低了。这里可能是因为CPU默频，在高负载下会自动睿频到4.8Ghz，从而提升了单核性能。</p>
+<p><img src="/images/overclocking-4.png" alt="超频后跑分"></p>
+<p>通过Ryzen Master以及CPU-Z的粗略的压力测试后，再通过AIDA64中的进行稳定性测试，勾选Stress FPU，点击Start，观察CPU-Z中的频率以及电压看是否稳定，CPU温度是否在合理范围内。在稳定跑半个小时左右，基本宣告超频完成，如果途中出现黑屏重启或死机，适当调高电压，最好不超过1.45v，不然你懂得。如果希望进一步提升频率，重复上述步骤即可。</p>
+<p><img src="/images/overclocking-5.png" alt="AIDA64"></p>
+<p>由于Ryzen Master重启后需要手动启动才能生效，在确定CPU核心频率及电压后，只需要进一次BIOS，在对应的位置上设置好参数即可。</p>
+<h2 id="显卡超频"><a href="#显卡超频" class="headerlink" title="显卡超频"></a>显卡超频</h2><p>显卡超频与CPU超频类似，也是通过调整核心频率，再执行对应的压力测试即可。</p>
+<p>通过MSI Afterburner来提高核心频率，如下图所示，先将功耗限制以及温度限制拉满。</p>
+<p><img src="/images/overclocking-6.png" alt="Afterburner"></p>
+<p>按照每次提高50MHz核心频率，如果对显卡自信的话，也可以提高多一些。设置完成后点击右下角保存，接下来只需通过显卡压测软件进行压测即可。这里推荐 FurMark 或 3DMark的Time Spy压力测试，如果设置的频率未通过压测，就降低20MHz，如此反复，直到通过压测。</p>
+<p><img src="/images/overclocking-7.png" alt="3DMark"></p>
+<p>通过压测后，如需开机启动超频配置，只需要对相应的配置点击startup即可</p>
+<p><img src="/images/overclocking-8.png" alt="startup"></p>
+<p>另外，在许多评测视频中，经常能看到在游戏画面中显示硬件信息，就是通过MSI Afterburner的硬件实时监控功能，如果想在游戏中显示各类硬件信息，可在MSI Afterburner设置中，开启OSD显示。</p>
+<p><img src="/images/overclocking-9.png" alt="Afterburner OSD"></p>
+<p>开启OSD并启动RTSS后，即可在游戏中显示数据，如下图左上角。</p>
+<p><img src="/images/overclocking-10.png" alt="OSD"></p>
+<h2 id="内存超频"><a href="#内存超频" class="headerlink" title="内存超频"></a>内存超频</h2><p>由于CPU具有默认支持的内存频率，例如DDR4可能是2133MHz，如果购买了DDR4 3200MHz或更高，在未修改BIOS的前提下，开机内存频率只会是2133MHz。而达到3200MHz，则需要我们手动进入BIOS，开启XMP，也就是内存预设超频。</p>
+<p><img src="/images/overclocking-11.png" alt="XMP设置"></p>
+<p><img src="/images/overclocking-12.png" alt="开启XMP后的内存频率"></p>
+<p>当然内存也支持手动超频，具体的超频能力实际跟购买内存颗粒有关。但在体验了一次扣主板电池后，我放弃了这个选项，不然不知道又要重置多少次BIOS，只能自我安慰，预设超频挺好的：）。具体的手动超频可参考<a href="https://post.smzdm.com/p/a25rz47n/" target="_blank" rel="noopener">这篇文章</a>。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>相对于内存超频，会导致电脑无法开机，需要重置BIOS，CPU和显卡则安心的多，大不了就是黑屏重启。可能本身性能过剩的原因，也可能是操作不到位，超频并没有给我太多直观上的提升。当然喜欢折腾的人可以来试试看</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CPU超频"><span class="toc-number">2.</span> <span class="toc-text">CPU超频</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#显卡超频"><span class="toc-number">3.</span> <span class="toc-text">显卡超频</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存超频"><span class="toc-number">4.</span> <span class="toc-text">内存超频</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2021/01/10/overclock/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2021/01/10/overclock/&text=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2021/01/10/overclock/&is_video=false&description=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=装机实录之超频篇&body=Check out this article: https://www.wzmmmmj.com/2021/01/10/overclock/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2021/01/10/overclock/&title=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2021/01/10/overclock/&name=装机实录之超频篇&description=" target="_blank" rel="noopener"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2021/01/10/overclock/&t=装机实录之超频篇" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>

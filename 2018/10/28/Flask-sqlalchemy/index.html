@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="最近看了点Flask，不同于Django的一小点，Flask没有自带ORM(其实大部分功能都没有)，不过如果需要操作数据库，可以使用第三方库flask-sqlalchemy ，大概用法与Django ORM 如出一辙。  配置sqlalchemy首先当然是安装依赖啦pip install flask-sqlalchemy, 然后就是配置数据库 12345678910import osfrom f">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈Flask-sqlalchemy">
+<meta property="og:url" content="https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/index.html">
+<meta property="og:site_name" content="Ackerr.">
+<meta property="og:description" content="最近看了点Flask，不同于Django的一小点，Flask没有自带ORM(其实大部分功能都没有)，不过如果需要操作数据库，可以使用第三方库flask-sqlalchemy ，大概用法与Django ORM 如出一辙。  配置sqlalchemy首先当然是安装依赖啦pip install flask-sqlalchemy, 然后就是配置数据库 12345678910import osfrom f">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2018-10-28T20:08:58.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:06:32.053Z">
+<meta property="article:author" content="ZmJ">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Flask">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+        
+      
+    
+    <!-- title -->
+    <title>浅谈Flask-sqlalchemy</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="Ackerr." type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2018/11/04/Pipenv/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2018/10/11/git-commit-and-flake8/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/" target="_blank" rel="noopener"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&text=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&is_video=false&description=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=浅谈Flask-sqlalchemy&body=Check out this article: https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&name=浅谈Flask-sqlalchemy&description=&lt;blockquote&gt;
+&lt;p&gt;最近看了点Flask，不同于Django的一小点，Flask没有自带ORM(其实大部分功能都没有)，不过如果需要操作数据库，可以使用第三方库flask-sqlalchemy ，大概用法与Django ORM 如出一辙。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;配置sqlalchemy&#34;&gt;&lt;a href=&#34;#配置sqlalchemy&#34; class=&#34;headerlink&#34; title=&#34;配置sqlalchemy&#34;&gt;&lt;/a&gt;配置sqlalchemy&lt;/h2&gt;&lt;p&gt;首先当然是安装依赖啦&lt;code&gt;pip install flask-sqlalchemy&lt;/code&gt;, 然后就是配置数据库&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; os&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; flask &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; Flask&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; flask_sqlalchemy &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; SQLAlchemy&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;basedir = os.path.abspath(os.path.dirname(__file__))&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;app = Flask(__name__)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;app.config[&lt;span class=&#34;string&#34;&gt;&#39;SQLALCHEMY_DATABASE_URI&#39;&lt;/span&gt;] = &lt;span class=&#34;string&#34;&gt;&#39;sqlite:///&#39;&lt;/span&gt;+os.path.join(base_dir,&lt;span class=&#34;string&#34;&gt;&#39;database.sqlite&#39;&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;db = SQLAlchemy(app)&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;如果使用其他数据库其实就是改下&lt;code&gt;SQLALCHEMY_DATABASE_URI&lt;/code&gt;, 以MySQL 为例：&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;app.config[&lt;span class=&#34;string&#34;&gt;&#39;SQLALCHEMY_DATABASE_URI&#39;&lt;/span&gt;] = &lt;span class=&#34;string&#34;&gt;&#39;mysql://f&amp;#123;username&amp;#125;:&amp;#123;password&amp;#125;@&amp;#123;hostname&amp;#125;/&amp;#123;database&amp;#125;&#39;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&t=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#配置sqlalchemy"><span class="toc-number">1.</span> <span class="toc-text">配置sqlalchemy</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#定义模型"><span class="toc-number">2.</span> <span class="toc-text">定义模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库关系"><span class="toc-number">3.</span> <span class="toc-text">数据库关系</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#一对多"><span class="toc-number">3.0.1.</span> <span class="toc-text">一对多</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#一对一"><span class="toc-number">3.0.2.</span> <span class="toc-text">一对一</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#多对多"><span class="toc-number">3.0.3.</span> <span class="toc-text">多对多</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库迁移"><span class="toc-number">4.</span> <span class="toc-text">数据库迁移</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库操作"><span class="toc-number">5.</span> <span class="toc-text">数据库操作</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        浅谈Flask-sqlalchemy
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ZmJ</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2018-10-28T20:08:58.000Z" itemprop="datePublished">2018/10/28</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Flask/" rel="tag">Flask</a>, <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>最近看了点Flask，不同于Django的一小点，Flask没有自带ORM(其实大部分功能都没有)，不过如果需要操作数据库，可以使用第三方库flask-sqlalchemy ，大概用法与Django ORM 如出一辙。</p>
+</blockquote>
+<h2 id="配置sqlalchemy"><a href="#配置sqlalchemy" class="headerlink" title="配置sqlalchemy"></a>配置sqlalchemy</h2><p>首先当然是安装依赖啦<code>pip install flask-sqlalchemy</code>, 然后就是配置数据库</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</span><br><span class="line"><span class="keyword">from</span> flask_sqlalchemy <span class="keyword">import</span> SQLAlchemy</span><br><span class="line"></span><br><span class="line">basedir = os.path.abspath(os.path.dirname(__file__))</span><br><span class="line">app = Flask(__name__)</span><br><span class="line">app.config[<span class="string">'SQLALCHEMY_DATABASE_URI'</span>] = <span class="string">'sqlite:///'</span>+os.path.join(base_dir,<span class="string">'database.sqlite'</span>)</span><br><span class="line"></span><br><span class="line">db = SQLAlchemy(app)</span><br></pre></td></tr></table></figure>
+
+<p>如果使用其他数据库其实就是改下<code>SQLALCHEMY_DATABASE_URI</code>, 以MySQL 为例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">app.config[<span class="string">'SQLALCHEMY_DATABASE_URI'</span>] = <span class="string">'mysql://f&#123;username&#125;:&#123;password&#125;@&#123;hostname&#125;/&#123;database&#125;'</span></span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+
+<h2 id="定义模型"><a href="#定义模型" class="headerlink" title="定义模型"></a>定义模型</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> src <span class="keyword">import</span> db</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(db.Model)</span>:</span></span><br><span class="line">    __tablename__ = <span class="string">'users'</span></span><br><span class="line">    id = db.Column(db.Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">    username = db.Column(db.String(<span class="number">64</span>), unique=<span class="literal">True</span>, index=<span class="literal">True</span>)</span><br><span class="line">    role_id = db.Column(db.Integer, db.ForeignKey(<span class="string">'roles.id'</span>))</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__str__</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.username</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Role</span><span class="params">(db.Model)</span>:</span></span><br><span class="line">    __tablename__ = <span class="string">'roles'</span></span><br><span class="line">    id = db.Column(db.Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">    name = db.Column(db.String(<span class="number">60</span>), unique=<span class="literal">True</span>)</span><br><span class="line">    users = db.relationship(<span class="string">'User'</span>, backref=<span class="string">'role'</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__str__</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.name</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>如果想使用继承id图方便,外键部分需要使用primaryjoin<a href='https://stackoverflow.com/questions/52414291/accessing-a-mixin-member-variable-column-from-the-child' target="_blank" rel="noopener">一个坑</a></p>
+</blockquote>
+<p>其中 <code>__tablename__</code>可以重新定义表在库中的名字，<code>db.Column()</code> 为一个字段，第一个参数为字段类型如<code>db.String(32)</code>为字符串类型， <code>primary_key=True</code>字段为主键,(这里与Django orm 中会默认生成一个id作为主键不同), 其他类型 <code>unique=True</code>为唯一键，<code>index=True</code>为字段建立索引，<code>default=0</code>设置一个默认值，<code>nullable=True</code>该字段可为null </p>
+<h2 id="数据库关系"><a href="#数据库关系" class="headerlink" title="数据库关系"></a>数据库关系</h2><p>数据库关系一般分为3种， 一对多，一对一， 多对多</p>
+<h4 id="一对多"><a href="#一对多" class="headerlink" title="一对多"></a>一对多</h4><p>如果需要构建一对多关系，需要添加外键</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(BaseModel)</span>:</span></span><br><span class="line">    <span class="comment">#...</span></span><br><span class="line">    role_id = db.Column(db.Integer, db.ForeignKey(<span class="string">'role.id'</span>))</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Role</span><span class="params">(BaseModel)</span>:</span></span><br><span class="line">    <span class="comment">#...</span></span><br><span class="line">    users = db.realationship(<span class="string">'User'</span>, backref=<span class="string">'role'</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这里给User表加了一个关联Role表的外键， 其中backref给role表做了一个反向引用</p>
+<h4 id="一对一"><a href="#一对一" class="headerlink" title="一对一"></a>一对一</h4><p>如果是想将两表构成一对一只需要一步,realationship 中将<code>uselist=False</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">users = db.realationship(<span class="string">'User'</span>, uselist=<span class="literal">False</span>, backref=<span class="string">'role'</span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="多对多"><a href="#多对多" class="headerlink" title="多对多"></a>多对多</h4><p>多对多关系需要使用第三张表来建立关系，此处用官方文档的例子占个坑</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">tags = db.Table(<span class="string">'tags'</span>,</span><br><span class="line">    db.Column(<span class="string">'tag_id'</span>, db.Integer, db.ForeignKey(<span class="string">'tag.id'</span>), primary_key=<span class="literal">True</span>),</span><br><span class="line">    db.Column(<span class="string">'page_id'</span>, db.Integer, db.ForeignKey(<span class="string">'page.id'</span>), primary_key=<span class="literal">True</span>)</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Page</span><span class="params">(db.Model)</span>:</span></span><br><span class="line">    id = db.Column(db.Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">    tags = db.relationship(<span class="string">'Tag'</span>, secondary=tags, lazy=<span class="string">'subquery'</span>,</span><br><span class="line">        backref=db.backref(<span class="string">'pages'</span>, lazy=<span class="literal">True</span>))</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Tag</span><span class="params">(db.Model)</span>:</span></span><br><span class="line">    id = db.Column(db.Integer, primary_key=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="数据库迁移"><a href="#数据库迁移" class="headerlink" title="数据库迁移"></a>数据库迁移</h2><p>新建表或新增字段之后，需要做的第一步就是迁移数据库，在Django中两条命令即可</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python manage.py migrate</span><br><span class="line">python manage.py makemigrations</span><br></pre></td></tr></table></figure>
+
+<p>然而在Flask 中也不自带这些命令，如果用最原始的方式创建表，需要shell 中执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">from src import db</span><br><span class="line">db.create_all()  # 创建所有表</span><br><span class="line">db.drop_all()    # 有更新需要删表重新建</span><br><span class="line">db.create_all()</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这样操作最大的问题不是麻烦，而是需要更新把原来的数据都删光了，感觉蠢的一匹~</p>
+</blockquote>
+<p>所以这里要使用另一个第三方库<code>Flask-Migrate</code>,大致的操作跟Django差不多，</p>
+<ol>
+<li>安装依赖</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install flask-migrate</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>第一步需要去添加配置</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask_migrate <span class="keyword">import</span> Migrate</span><br><span class="line"></span><br><span class="line"><span class="comment"># ...</span></span><br><span class="line">migrate = Migrate(app)</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>第一次需要初始化项目，创建迁移仓库，会生成一个存放迁移文件的<code>migrations</code>文件夹</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">flask db init</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>每当有数据库更新时，需要创建迁移脚本</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">flask db migrate -m &#39;migrate message&#39;</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>将迁移应用到数据库中</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">flask db upgrade</span><br></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>如果最后一次迁移未达到预期效果，可以还原上一次改动</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">flask db downgrade</span><br><span class="line"><span class="comment"># 删了最后一次的迁移文件,重新改动数据库,再重复3，4动作</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="数据库操作"><a href="#数据库操作" class="headerlink" title="数据库操作"></a>数据库操作</h2><p>大部分的增删改查操作，跟 Django ORM都没啥大区别，无非就是一些语法, 最主要应该就是sqlalchemy 需要<code>db.session.add()</code>  和 <code>db.session.commit()</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 增</span></span><br><span class="line">role = Role(name=<span class="string">'admin'</span>)</span><br><span class="line">user1 = User(username=<span class="string">'ZmJ'</span>, role=role)</span><br><span class="line">user2 = User(username=<span class="string">'zmj'</span>role=role)</span><br><span class="line">db.session.add_all([user1, user2])</span><br><span class="line">db.session.commit()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查</span></span><br><span class="line">user1 = User.query.filter_by(username=<span class="string">'ZmJ'</span>).first()</span><br><span class="line">user2 = User.query.filter_by(username=<span class="string">'zmj'</span>).first()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 改</span></span><br><span class="line">user1.username = <span class="string">'Flask'</span></span><br><span class="line">db.session.add(user1)</span><br><span class="line">db.session.commit()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删</span></span><br><span class="line">db.session.delete(user2)</span><br><span class="line">db.session.commit()</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>具体内容可查看官方文档</p>
+<p> <a href='https://flask-migrate.readthedocs.io/en/latest/' target="_blank" rel="noopener">flask-migrate官方文档</a></p>
+<p><a href='http://flask-sqlalchemy.pocoo.org/2.3/' target="_blank" rel="noopener">flask-sqlalchemy官方文档</a></p>
+</blockquote>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the comments.</noscript>
+        </div>
+    </div>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/archives/">archives</a></li>
+         
+          <li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li>
+         
+          <li><a href="/atom.xml">rss</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#配置sqlalchemy"><span class="toc-number">1.</span> <span class="toc-text">配置sqlalchemy</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#定义模型"><span class="toc-number">2.</span> <span class="toc-text">定义模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库关系"><span class="toc-number">3.</span> <span class="toc-text">数据库关系</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#一对多"><span class="toc-number">3.0.1.</span> <span class="toc-text">一对多</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#一对一"><span class="toc-number">3.0.2.</span> <span class="toc-text">一对一</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#多对多"><span class="toc-number">3.0.3.</span> <span class="toc-text">多对多</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库迁移"><span class="toc-number">4.</span> <span class="toc-text">数据库迁移</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库操作"><span class="toc-number">5.</span> <span class="toc-text">数据库操作</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/" target="_blank" rel="noopener"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&text=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&is_video=false&description=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=浅谈Flask-sqlalchemy&body=Check out this article: https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&title=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&name=浅谈Flask-sqlalchemy&description=&lt;blockquote&gt;
+&lt;p&gt;最近看了点Flask，不同于Django的一小点，Flask没有自带ORM(其实大部分功能都没有)，不过如果需要操作数据库，可以使用第三方库flask-sqlalchemy ，大概用法与Django ORM 如出一辙。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;配置sqlalchemy&#34;&gt;&lt;a href=&#34;#配置sqlalchemy&#34; class=&#34;headerlink&#34; title=&#34;配置sqlalchemy&#34;&gt;&lt;/a&gt;配置sqlalchemy&lt;/h2&gt;&lt;p&gt;首先当然是安装依赖啦&lt;code&gt;pip install flask-sqlalchemy&lt;/code&gt;, 然后就是配置数据库&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;10&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; os&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; flask &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; Flask&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;keyword&#34;&gt;from&lt;/span&gt; flask_sqlalchemy &lt;span class=&#34;keyword&#34;&gt;import&lt;/span&gt; SQLAlchemy&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;basedir = os.path.abspath(os.path.dirname(__file__))&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;app = Flask(__name__)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;app.config[&lt;span class=&#34;string&#34;&gt;&#39;SQLALCHEMY_DATABASE_URI&#39;&lt;/span&gt;] = &lt;span class=&#34;string&#34;&gt;&#39;sqlite:///&#39;&lt;/span&gt;+os.path.join(base_dir,&lt;span class=&#34;string&#34;&gt;&#39;database.sqlite&#39;&lt;/span&gt;)&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&#34;line&#34;&gt;db = SQLAlchemy(app)&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;如果使用其他数据库其实就是改下&lt;code&gt;SQLALCHEMY_DATABASE_URI&lt;/code&gt;, 以MySQL 为例：&lt;/p&gt;
+&lt;figure class=&#34;highlight python&#34;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#34;gutter&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#34;code&#34;&gt;&lt;pre&gt;&lt;span class=&#34;line&#34;&gt;app.config[&lt;span class=&#34;string&#34;&gt;&#39;SQLALCHEMY_DATABASE_URI&#39;&lt;/span&gt;] = &lt;span class=&#34;string&#34;&gt;&#39;mysql://f&amp;#123;username&amp;#125;:&amp;#123;password&amp;#125;@&amp;#123;hostname&amp;#125;/&amp;#123;database&amp;#125;&#39;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://www.wzmmmmj.com/2018/10/28/Flask-sqlalchemy/&t=浅谈Flask-sqlalchemy" target="_blank" rel="noopener"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    ZmJ
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">archives</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/Ackerr" target="_blank" rel="noopener">github</a></li><!--
+     --><!--
+       --><li><a href="/atom.xml">rss</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157787196-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-157787196-1');
+    </script>
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'zmj';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+<!-- utterances Comments -->
+
+</body>
+</html>
